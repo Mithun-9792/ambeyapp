@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "ambey",
+    "slug": "ambey",
+    "version": "1.0.0",
+    "android": {
+      "package": "com.anonymous.ambey",
+      "newArchEnabled": true
+    }
+  }
+}

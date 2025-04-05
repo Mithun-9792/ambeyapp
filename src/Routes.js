@@ -1,0 +1,36 @@
+import React from "react";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import OnboardingScreen from "./screens/Onboarding";
+import LoginScreen from "./screens/LoginScreen";
+import { SCREENS } from "./constants/route";
+import Dashboard from "./screens/Dashboard";
+import EmployeeRegister from "./screens/EmployeeRegister";
+
+const Stack = createNativeStackNavigator();
+
+export default function Routes() {
+  return (
+    <Stack.Navigator initialRouteName={SCREENS.ONBOARDING}>
+      <Stack.Screen
+        name={SCREENS.ONBOARDING}
+        component={OnboardingScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name={SCREENS.LOGIN}
+        options={{ headerShown: false }}
+        component={LoginScreen}
+      />
+      <Stack.Screen
+        name={SCREENS.DASHBOARD}
+        options={{ headerShown: false }}
+        component={Dashboard}
+      />
+      <Stack.Screen
+        name={SCREENS.EMPLOYEEREGISTER}
+        options={{ headerShown: true, title: "Employee Register" }}
+        component={EmployeeRegister}
+      />
+    </Stack.Navigator>
+  );
+}
