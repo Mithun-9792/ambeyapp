@@ -64,7 +64,11 @@ function Dashboard({ navigation }) {
           onPress={() => navigation.push(SCREENS.EMPLOYEEREGISTER)}
           style={styles.btn}
         />
-        <CustomButton btnText={"Employee Upload Doc"} style={styles.btn} />
+        <CustomButton
+          btnText={"Employee Upload Doc"}
+          style={styles.btn}
+          onPress={() => navigation.push(SCREENS.EMPLOYEEUPLOADDOC)}
+        />
       </View>
     </SafeAreaView>
   );

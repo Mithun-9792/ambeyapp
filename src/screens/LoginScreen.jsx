@@ -13,9 +13,9 @@ export default function Example({ navigation }) {
   const [form, setForm] = useState({
     email: "",
     password: "",
-    IP: "",
-    MAC: "",
-    Geolocation: "",
+    IP: "192.168.11.11",
+    MAC: "06:0c:e0:89:38:fb",
+    Geolocation: "-52.81184",
   });
 
   const handleLogin = () => {
