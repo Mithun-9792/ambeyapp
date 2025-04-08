@@ -9,30 +9,45 @@ import {
   Image,
 } from "react-native";
 import { loginService } from "../services/auth.services";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function Example({ navigation }) {
   const [form, setForm] = useState({
-    email: "",
-    password: "",
-    IP: "192.168.11.11",
-    MAC: "06:0c:e0:89:38:fb",
-    Geolocation: "-52.81184",
+    UserId: "",
+    Password: "",
+    IP: "",
+    MAC: "",
+    Geolocation: "",
   });
 
+  const storeUserData = async (userData) => {
+    try {
+      await AsyncStorage.setItem("userData", JSON.stringify(userData));
+      console.log("User data saved to AsyncStorage");
+    } catch (error) {
+      console.error("Error saving user data", error);
+    }
+  };
+
   const handleLogin = () => {
-    if (form.email === "" || form.password === "") {
+    if (form.UserId === "" || form.Password === "") {
       alert("Please fill all the fields");
       return;
     }
-    console.log(form);
-    loginService(form).then((res) => {
-      console.log(res.data);
-      if (res.data.StatusCode == 200) {
-        navigation.push("Dashboard");
-      } else {
-        navigation.push("Dashboard");
-        alert(res.data.Message);
-      }
+    const formData = new FormData();
+    Object.keys(form).forEach((key) => {
+      formData.append(key, form[key]);
     });
+    console.log(formData);
+    loginService(formData)
+      .then((res) => {
+        console.log(res.data?.result[0]);
+        storeUserData(res.data?.result[0]);
+        navigation.push("Dashboard");
+      })
+      .catch((err) => {
+        console.log(err.response.data);
+        alert(err.response.data.Message);
+      });
   };
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
@@ -50,11 +65,11 @@ export default function Example({ navigation }) {
               autoCorrect={false}
               clearButtonMode="while-editing"
               keyboardType="number-pad"
-              onChangeText={(email) => setForm({ ...form, email })}
+              onChangeText={(UserId) => setForm({ ...form, UserId })}
               placeholder="ex:- 1256358"
               placeholderTextColor="#6b7280"
               style={styles.inputControl}
-              value={form.email}
+              value={form.UserId}
             />
           </View>
           <View style={styles.input}>
@@ -62,12 +77,12 @@ export default function Example({ navigation }) {
             <TextInput
               autoCorrect={false}
               clearButtonMode="while-editing"
-              onChangeText={(password) => setForm({ ...form, password })}
+              onChangeText={(Password) => setForm({ ...form, Password })}
               placeholder="********"
               placeholderTextColor="#6b7280"
               style={styles.inputControl}
               secureTextEntry={true}
-              value={form.password}
+              value={form.Password}
             />
           </View>
           <View style={styles.formAction}>

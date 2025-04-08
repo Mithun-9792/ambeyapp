@@ -19,12 +19,12 @@ import { Picker } from "@react-native-picker/picker";
 import CustomButton from "../components/CustomButton";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { registerService } from "../services/auth.services";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const schema = yup.object().shape({
   employeeCode: yup.string().required("Employee Code is required"),
   FullName: yup.string().required("Full Name is required"),
-  // middleName: yup.string(),
-  // lastName: yup.string().required("Last Name is required"),
+  MemberId: yup.string().required("Member Id is required"),
   // gender: yup.string().required("Gender is required"),
   // fatherHusband: yup.string().required("Father/Husband Name is required"),
   // // DateofJoining: yup.date().required("Date of Joining is required"),
@@ -68,7 +68,30 @@ const EmployeeRegister = () => {
   const [dateofjoining, setDateofjoining] = useState(new Date());
   const [dateofbirth, setDateofbirth] = useState(new Date());
   const [showDatePickerExpiry, setShowDatePickerExpiry] = useState(false);
+  const [userData, setUserData] = useState(null);
 
+  const getUserData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("userData");
+      if (jsonValue != null) {
+        const userData = JSON.parse(jsonValue);
+        setUserData(userData);
+        setValue("MemberId", userData.MemberId?.toString() || "");
+        setValue("FullName", userData.Name || "");
+        setValue("MobileNo", userData.Mobile || "");
+        setValue("UserId", userData.UserId || "");
+        setValue("UserToken", userData.UserToken || "");
+        setValue("IP", "130.202.522.0255");
+        setValue("MAC", "ASDS9232NSDSD");
+        setValue("GeoLocation", "26.8467° N, 80.9462° E");
+        return userData;
+      }
+    } catch (error) {
+      console.error("Error retrieving user data", error);
+    }
+  };
+
+  getUserData();
   const pickImage = async (setImage) => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
@@ -85,16 +108,37 @@ const EmployeeRegister = () => {
   const onSubmit = (data) => {
     data.imgUser = profileImage;
     data.imgDocument = documentImage;
+    const formData = new FormData();
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+
+      // Format date fields as dd/mm/yyyy
+      if (key === "DateofJoining" || key === "Dateofbirth") {
+        formData.append(key, formatDate(value));
+      } else if (key === "imgUser") {
+        // If imgUser is a local file URI (e.g., from ImagePicker), handle it like this:
+        formData.append("imgUser", {
+          uri: value,
+          type: "image/jpeg", // or detect from file
+          name: "user_image.jpg",
+        });
+      } else {
+        formData.append(key, value.toString());
+      }
+    });
+
     console.log(data);
-    registerService(data)
+    registerService(formData)
       .then((res) => {
         console.log(res.data);
-        if (res.data.StatusCode == 200) {
-          alert("Employee Registered Successfully");
-          reset();
-        } else {
-          alert(res.data.Message);
-        }
+        // if (res.data.StatusCode == 200) {
+        //   alert("Employee Registered Successfully");
+        //   reset();
+        // } else {
+
+        //   alert(res.data.Message);
+        // }
       })
       .catch((error) => {
         console.error("Error:", error);
@@ -383,6 +427,23 @@ const EmployeeRegister = () => {
         </View>
 
         <View style={styles.inputControl}>
+          <Text style={styles.inputLabel}>Mobile No</Text>
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Mobile No"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+            name="MobileNo"
+          />
+        </View>
+
+        <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Alternate Mobile No</Text>
           <Controller
             control={control}
@@ -418,22 +479,6 @@ const EmployeeRegister = () => {
               )}
             />
           </View>
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Mobile No</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Mobile No"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="MobileNo"
-          />
         </View>
 
         <View style={styles.inputControl}>
