@@ -19,9 +19,12 @@ import { Picker } from "@react-native-picker/picker";
 import CustomButton from "../components/CustomButton";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {
+  getCityService,
   getDepartmentService,
   getDesignationService,
+  getNomineeRelationService,
   getStateService,
+  getTitleService,
   registerService,
 } from "../services/auth.services";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -77,10 +80,16 @@ const EmployeeRegister = () => {
   const [designations, setDesignations] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [relations, setRelations] = useState([]);
+  const [title, setTitle] = useState([]);
 
   useEffect(() => {
     const formdata = new FormData();
+    formdata.append("NomnieeTypeId", "-1");
+    formdata.append("TitleId", "-1");
     formdata.append("StateId", "-1");
+    formdata.append("CityId", "-1");
     formdata.append("DesigantionID", "-1");
     formdata.append("DepartmentId", "-1");
     formdata.append("Status", "Z");
@@ -110,8 +119,32 @@ const EmployeeRegister = () => {
 
     getStateService(formdata)
       .then((res) => {
-        console.log(res.data?.result)
+        // console.log(res.data?.result)
         setStates(res.data?.result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    getCityService(formdata)
+      .then((res) => {
+        // console.log(res.data?.result)
+        setCities(res.data?.result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    getNomineeRelationService(formdata)
+      .then((res) => {
+        // console.log(res.data?.result)
+        setRelations(res.data?.result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    getTitleService(formdata)
+      .then((res) => {
+        // console.log(res.data?.result)
+        setTitle(res.data?.result);
       })
       .catch((err) => {
         console.log(err);
@@ -144,52 +177,33 @@ const EmployeeRegister = () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
+      base64: true,
       aspect: [4, 3],
       quality: 1,
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      setImage(result.assets[0].base64);
     }
   };
 
   const onSubmit = (data) => {
-    data.imgUser = "profileImage";
-    // data.imgDocument = documentImage;
-    console.log(data);
+    data.imgUser = profileImage;
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
       if (value === undefined || value === null) return;
-
-      // Format date fields as dd/mm/yyyy
       if (key === "DateofJoining" || key === "Dateofbirth") {
         formData.append(key, new Date(value).toLocaleDateString());
-      }
-      // else if (key === "imgUser") {
-      //   // If imgUser is a local file URI (e.g., from ImagePicker), handle it like this:
-      //   formData.append("imgUser", {
-      //     uri: value,
-      //     type: "image/jpeg", // or detect from file
-      //     name: "user_image.jpg",
-      //   });
-      // }
-      else {
+      } else {
         formData.append(key, value.toString());
       }
     });
 
-    console.log(data);
     registerService(formData)
       .then((res) => {
         console.log(res.data);
-        // if (res.data.StatusCode == 200) {
-        //   alert("Employee Registered Successfully");
-        //   reset();
-        // } else {
-
-        //   alert(res.data.Message);
-        // }
+        reset();
       })
       .catch((error) => {
         console.error("Error:", error);
@@ -224,13 +238,16 @@ const EmployeeRegister = () => {
     control._fields.expiryDate.onChange(currentDate);
   };
 
+  const eighteenYearsAgo = new Date();
+  eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+
   return (
     <ScrollView style={styles.container}>
       {/* <View style={styles.headerContainer}>
         <Text style={styles.sectionTitle}>Employee Registration</Text>
       </View> */}
       <View style={{ marginBottom: 30 }}>
-        <View style={styles.inputControl}>
+        {/* <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Member Id</Text>
           <Controller
             control={control}
@@ -248,7 +265,7 @@ const EmployeeRegister = () => {
           {errors.MemberId && (
             <Text style={styles.error}>{errors.MemberId.message}</Text>
           )}
-        </View>
+        </View> */}
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Registration Code</Text>
           <Controller
@@ -269,25 +286,6 @@ const EmployeeRegister = () => {
           )}
         </View>
         <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Title ID</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Title ID"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="TitleId"
-          />
-          {errors.TitleId && (
-            <Text style={styles.error}>{errors.TitleId.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Employee Code</Text>
           <Controller
             control={control}
@@ -305,6 +303,34 @@ const EmployeeRegister = () => {
           {errors.employeeCode && (
             <Text style={styles.error}>{errors.employeeCode.message}</Text>
           )}
+        </View>
+        <View style={styles.inputControl}>
+          <Text style={styles.inputLabel}>Title</Text>
+          <View style={styles.pickerContainer}>
+            <Controller
+              control={control}
+              name="TitleId"
+              render={({ field: { onChange, value } }) => (
+                <Picker
+                  selectedValue={value}
+                  onValueChange={onChange}
+                  style={styles.picker}
+                  mode="dropdown"
+                >
+                  {title &&
+                    title.map((item) => {
+                      return (
+                        <Picker.Item
+                          label={item?.Type}
+                          value={item?.ID}
+                          key={item?.ID}
+                        />
+                      );
+                    })}
+                </Picker>
+              )}
+            />
+          </View>
         </View>
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Full Name</Text>
@@ -407,34 +433,65 @@ const EmployeeRegister = () => {
             name="DateofJoining"
             defaultValue={dateofjoining}
             render={({ field: { onChange, onBlur, value } }) => (
-              <TouchableOpacity onPress={() => setShowDatePickerJoining(true)}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter Date of Joining"
-                  onBlur={onBlur}
-                  value={value ? new Date(value).toLocaleDateString() : ""}
-                  editable={false}
-                  pointerEvents="none" // To prevent keyboard
-                />
+              <>
+                <TouchableOpacity
+                  onPress={() => setShowDatePickerJoining(true)}
+                >
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter Date of Joining"
+                    onBlur={onBlur}
+                    value={value ? new Date(value).toLocaleDateString() : ""}
+                    editable={false}
+                    pointerEvents="none" // Prevents keyboard popup
+                  />
+                </TouchableOpacity>
+
                 {showDatePickerJoining && (
                   <DateTimePicker
                     testID="joiningDatePicker"
-                    value={dateofjoining || new Date()} // Make sure it's always up to date
+                    value={value ? new Date(value) : new Date()}
                     mode="date"
                     is24Hour={true}
                     display="default"
                     onChange={(event, selectedDate) => {
                       setShowDatePickerJoining(false);
-                      if (selectedDate) {
-                        setDateofjoining(selectedDate); // Update local state
-                        onChange(selectedDate); // Pass the selected date to the form control
+                      if (event.type === "set" && selectedDate) {
+                        setDateofjoining(selectedDate); // Local state update (if needed)
+                        onChange(selectedDate.toISOString()); // Form value update
                       }
                     }}
                   />
                 )}
-              </TouchableOpacity>
+              </>
             )}
           />
+          {showDatePickerJoining && (
+            <Controller
+              control={control}
+              name="DateofJoining"
+              defaultValue={dateofjoining}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <>
+                  <DateTimePicker
+                    testID="joiningDatePicker"
+                    value={value ? new Date(value) : dateofjoining}
+                    mode="date"
+                    is24Hour={true}
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowDatePickerJoining(false);
+                      if (event.type === "set" && selectedDate) {
+                        setDateofjoining(selectedDate); // Local state update (if needed)
+                        onChange(selectedDate.toISOString()); // Form value update
+                      }
+                    }}
+                  />
+                </>
+              )}
+            />
+          )}
+
           {errors.DateofJoining && (
             <Text style={styles.error}>{errors.DateofJoining.message}</Text>
           )}
@@ -457,10 +514,11 @@ const EmployeeRegister = () => {
                 {showDatePickerBirth && (
                   <DateTimePicker
                     testID="birthDatePicker"
-                    value={value}
+                    value={value ? new Date(value) : eighteenYearsAgo}
                     mode="date"
                     is24Hour={true}
                     display="default"
+                    maximumDate={eighteenYearsAgo}
                     onChange={(event, selectedDate) => {
                       setShowDatePickerBirth(false);
                       if (selectedDate) {
@@ -627,7 +685,7 @@ const EmployeeRegister = () => {
                   <Picker.Item label="Select Staff Type" value="" />
                   <Picker.Item label="Office" value="office" />
                   <Picker.Item label="Field" value="field" />
-                  <Picker.Item label="Other" value="other" />
+                  {/* <Picker.Item label="Other" value="other" /> */}
                 </Picker>
               )}
             />
@@ -692,9 +750,16 @@ const EmployeeRegister = () => {
                   mode="dropdown" // Dropdown mode for better UI
                 >
                   <Picker.Item label="Select Relation" value="" />
-                  <Picker.Item label="Father" value="1" />
-                  <Picker.Item label="Monther" value="2" />
-                  <Picker.Item label="Brother" value="3" />
+                  {relations &&
+                    relations.map((item) => {
+                      return (
+                        <Picker.Item
+                          label={item?.NomnieeType}
+                          value={item?.NomnieeTypeId}
+                          key={item?.NomnieeTypeId}
+                        />
+                      );
+                    })}
                 </Picker>
               )}
             />
@@ -793,112 +858,21 @@ const EmployeeRegister = () => {
                   style={styles.picker}
                   mode="dropdown"
                 >
-                  <Picker.Item label="Lucknow" value="1" />
-                  <Picker.Item label="Kanpur" value="2" />
-                  <Picker.Item label="Unnao" value="3" />
-                  <Picker.Item label="LMP" value="4" />
+                  {cities &&
+                    cities.map((item) => {
+                      return (
+                        <Picker.Item
+                          label={item?.City}
+                          value={item?.CityID}
+                          key={item?.CityID}
+                        />
+                      );
+                    })}
                 </Picker>
               )}
             />
           </View>
         </View>
-        {/* <View style={styles.pickerContainer}>
-          <Controller
-            control={control}
-            name="qualification"
-            render={({ field: { onChange, value } }) => (
-              <Picker
-                selectedValue={value}
-                onValueChange={onChange}
-                style={styles.picker}
-                mode="dropdown"
-              >
-                <Picker.Item label="High School" value="High School" />
-                <Picker.Item label="Inter Mediate" value="Inter Mediate" />
-                <Picker.Item label="Diploma" value="Diploma" />
-                <Picker.Item label="B.Tech" value="Btech" />
-                <Picker.Item label="B.Sc" value="Bsc" />
-                <Picker.Item label="B.A" value="BA" />
-                <Picker.Item label="M.Sc" value="Msc" />
-                <Picker.Item label="M.A" value="MA" />
-                <Picker.Item label="NAN" value="NAN" />
-              </Picker>
-            )}
-          />
-        </View> */}
-        {/* <View style={styles.pickerContainer}>
-          <Controller
-            control={control}
-            name="documentType"
-            render={({ field: { onChange, value } }) => (
-              <Picker
-                selectedValue={value}
-                onValueChange={onChange}
-                style={styles.picker}
-                mode="dropdown"
-              >
-                <Picker.Item label="Aadhar Card" value="AadharCard" />
-                <Picker.Item label="PAN Card" value="PAN" />
-                <Picker.Item label="Driving License" value="DL" />
-              </Picker>
-            )}
-          />
-        </View> */}
-        {/* <Controller
-          control={control}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
-              style={styles.input}
-              placeholder="Document No"
-              onBlur={onBlur}
-              onChangeText={onChange}
-              value={value}
-            />
-          )}
-          name="documentno"
-        /> */}
-        {/* <Controller
-          control={control}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <TouchableOpacity onPress={showExpiryDatePicker}>
-              <TextInput
-                style={styles.input}
-                placeholder="Expiry Date"
-                onBlur={onBlur}
-                value={value ? value.toDateString() : ""}
-                editable={false}
-              />
-            </TouchableOpacity>
-          )}
-          name="expiryDate"
-        />
-        {errors.expiryDate && (
-          <Text style={styles.error}>{errors.expiryDate.message}</Text>
-        )}
-
-        {showDatePickerExpiry && (
-          <DateTimePicker
-            testID="expiryDatePicker"
-            value={control._formValues.expiryDate || new Date()}
-            mode="date"
-            is24Hour={true}
-            display="default"
-            onChange={onChangeExpiryDate}
-          />
-        )} */}
-
-        {/* <View style={styles.imagePickerContainer}>
-          <TouchableOpacity onPress={() => pickImage(setDocumentImage)}>
-            <View style={styles.imagePlaceholder}>
-              {documentImage ? (
-                <Image source={{ uri: documentImage }} style={styles.image} />
-              ) : (
-                <Text>Upload Document</Text>
-              )}
-            </View>
-          </TouchableOpacity>
-        </View> */}
-
         <View
           style={{
             flexDirection: "row",
