@@ -11,12 +11,18 @@ import {
   View,
 } from "react-native";
 import CustomButton from "../components/CustomButton";
-import { getDocType, getEmployeeDetail } from "../services/auth.services";
+import {
+  getDocType,
+  getEmpDoc,
+  getEmployeeDetail,
+} from "../services/auth.services";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const schema = yup.object().shape({
   VwDocID: yup.string(),
@@ -31,6 +37,9 @@ function EmployeeUploadDoc() {
   const [employeeData, setEmployeeData] = useState([]);
   const [docImage, setDocImage] = useState("");
   const [docType, setDocType] = useState([]);
+  const [showExpiryPicker, setShowExpiryPicker] = useState(false);
+  const [imgPreview, setImgPreview] = useState("");
+  const [userData, setUserData] = useState({});
 
   const {
     control,
@@ -41,6 +50,19 @@ function EmployeeUploadDoc() {
   } = useForm({
     resolver: yupResolver(schema),
   });
+
+  const getUserData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("userData");
+      if (jsonValue != null) {
+        const userData = JSON.parse(jsonValue);
+        setUserData(userData);
+        return userData;
+      }
+    } catch (error) {
+      console.error("Error retrieving user data", error);
+    }
+  };
 
   useEffect(() => {
     const formData = new FormData();
@@ -59,7 +81,18 @@ function EmployeeUploadDoc() {
       .catch((err) => {
         console.error("Error fetching document types:", err);
       });
+    getUserData();
   }, []);
+
+  const handleGetDoc = (data) => {
+    getEmpDoc(data)
+      .then((res) => {
+        console.log(res.data?.result);
+      })
+      .catch((err) => {
+        console.error("Error fetching employee document:", err);
+      });
+  };
 
   const handleSearch = () => {
     // Your search logic here
@@ -76,16 +109,18 @@ function EmployeeUploadDoc() {
     formData.append("M14_DesignationID", "-1");
     formData.append("M33_LocationId", "-1");
     formData.append("StaffTypeCode", "");
-    formData.append("UserToken", "");
+    formData.append("UserToken", userData?.UserToken || "");
+    formData.append("UserId", userData.UserId || "");
     formData.append("IP", "");
     formData.append("MAC", "");
-    formData.append("UserId", "-1");
+    formData.append("DocTypeId", "-1");
     formData.append("GeoLocation", "56.225551,58.5646");
 
     getEmployeeDetail(formData)
       .then((res) => {
         console.log("Employee Details:", res.data.result);
         setEmployeeData(res.data.result);
+        handleGetDoc(formData);
       })
       .catch((err) => {
         console.error("Error fetching employee details:", err);
@@ -108,11 +143,13 @@ function EmployeeUploadDoc() {
     });
 
     if (!result.canceled) {
+      setImgPreview(result.assets[0].uri);
       setImage(result.assets[0].base64);
     }
   };
 
   const onSubmit = (data) => {
+    data.ImageUrlPath = docImage;
     console.log(data);
   };
 
@@ -178,74 +215,117 @@ function EmployeeUploadDoc() {
           />
         </View>
       </ScrollView>
-      <View style={[styles.uploadSec]}>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Select City</Text>
-          <View style={styles.pickerContainer}>
+      {employeeData.length > 0 && (
+        <View style={[styles.uploadSec]}>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Select City</Text>
+            <View style={styles.pickerContainer}>
+              <Controller
+                control={control}
+                name="VwDocID"
+                render={({ field: { onChange, value } }) => (
+                  <Picker
+                    selectedValue={value}
+                    onValueChange={onChange}
+                    style={styles.picker}
+                    mode="dropdown"
+                  >
+                    <Picker.Item label={"Select Document Type"} value={""} />
+                    {docType &&
+                      docType.map((item) => {
+                        return (
+                          <Picker.Item
+                            label={item?.DocumentType}
+                            value={item?.DocTypeId}
+                            key={item?.DocTypeId}
+                          />
+                        );
+                      })}
+                  </Picker>
+                )}
+              />
+            </View>
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Nominee Aadhar No</Text>
             <Controller
               control={control}
-              name="VwDocID"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Document No"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+              name="DocumentNo"
+            />
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Expiry Date</Text>
+            <Controller
+              control={control}
+              name="ExpiryDate"
+              defaultValue={null}
               render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  style={styles.picker}
-                  mode="dropdown"
-                >
-                  <Picker.Item label={"Select Document Type"} value={""} />
-                  {docType &&
-                    docType.map((item) => {
-                      return (
-                        <Picker.Item
-                          label={item?.DocumentType}
-                          value={item?.DocTypeId}
-                          key={item?.DocTypeId}
-                        />
-                      );
-                    })}
-                </Picker>
+                <>
+                  <TouchableOpacity onPress={() => setShowExpiryPicker(true)}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Select Expiry Date"
+                      value={value}
+                      editable={false}
+                      pointerEvents="none"
+                    />
+                  </TouchableOpacity>
+
+                  {showExpiryPicker && (
+                    <DateTimePicker
+                      value={value ? new Date(value) : new Date()}
+                      mode="date"
+                      display="default"
+                      onChange={(event, selectedDate) => {
+                        setShowExpiryPicker(false);
+                        if (event.type === "set" && selectedDate) {
+                          onChange(selectedDate.toLocaleDateString()); // store as ISO
+                        }
+                      }}
+                    />
+                  )}
+                </>
               )}
             />
           </View>
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Nominee Aadhar No</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Document No"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="DocumentNo"
+
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Profile Image</Text>
+            <View style={styles.imagePickerContainer}>
+              <TouchableOpacity onPress={() => pickImage(setDocImage)}>
+                <View
+                  style={[
+                    styles.imagePlaceholder,
+                    { height: imgPreview ? 200 : 50 },
+                  ]}
+                >
+                  {imgPreview ? (
+                    <Image source={{ uri: imgPreview }} style={styles.image} />
+                  ) : (
+                    <Text style={{ color: "gray", fontWeight: 500 }}>
+                      Choose Profile Image
+                    </Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <CustomButton
+            btnText="Upload Document"
+            style={[styles.btn]}
+            onPress={handleSubmit(onSubmit)}
           />
         </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Profile Image</Text>
-          <View style={styles.imagePickerContainer}>
-            <TouchableOpacity onPress={() => pickImage(setDocImage)}>
-              <View style={styles.imagePlaceholder}>
-                {docImage ? (
-                  <Image source={{ uri: docImage }} style={styles.image} />
-                ) : (
-                  <Text style={{ color: "gray", fontWeight: 500 }}>
-                    Choose Profile Image
-                  </Text>
-                )}
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <CustomButton
-          btnText="Upload Document"
-          style={[styles.btn]}
-          onPress={handleSubmit(onSubmit)}
-        />
-      </View>
+      )}
     </ScrollView>
   );
 }
@@ -343,7 +423,7 @@ const styles = StyleSheet.create({
     // marginBottom: 20,
   },
   imagePlaceholder: {
-    height: 50,
+    // height: 50,
     backgroundColor: "#fff",
     paddingHorizontal: 16,
     borderRadius: 12,
@@ -357,6 +437,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "start",
     marginBottom: 10,
+  },
+  image: {
+    width: "100%",
+    height: "100%",
   },
   pickerContainer: {
     height: 50,

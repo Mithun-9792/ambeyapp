@@ -76,3 +76,10 @@ export const getDocType = async (data) => {
     },
   });
 };
+export const getEmpDoc = async (data) => {
+  return await axios.post(API_ROUTES.GET_EMP_DOC_API, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
