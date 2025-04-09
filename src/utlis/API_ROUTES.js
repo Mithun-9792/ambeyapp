@@ -10,6 +10,7 @@ const API_ROUTES = {
   GET_NOMINEE_RELATION: `${BASS_URL}/APIServices/Get_NomineeRelation.aspx`,
   GET_TITLE_API: `${BASS_URL}/APIServices/GetTitle.aspx`,
   GET_EMPLOYEE_DETAILS_API: `${BASS_URL}/APIServices/GetEmployeeDetail.aspx`,
+  GET_DOC_TYPE_API: `${BASS_URL}/APIServices/GetDocumentType.aspx`,
 };
 
 export default API_ROUTES;

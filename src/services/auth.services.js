@@ -61,3 +61,18 @@ export const getTitleService = async (data) => {
     },
   });
 };
+export const getEmployeeDetail = async (data) => {
+  return await axios.post(API_ROUTES.GET_EMPLOYEE_DETAILS_API, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+export const getDocType = async (data) => {
+  return await axios.post(API_ROUTES.GET_DOC_TYPE_API, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
