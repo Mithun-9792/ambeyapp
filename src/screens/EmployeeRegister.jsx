@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -18,7 +18,12 @@ import * as ImagePicker from "expo-image-picker";
 import { Picker } from "@react-native-picker/picker";
 import CustomButton from "../components/CustomButton";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { registerService } from "../services/auth.services";
+import {
+  getDepartmentService,
+  getDesignationService,
+  getStateService,
+  registerService,
+} from "../services/auth.services";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const schema = yup.object().shape({
@@ -66,9 +71,52 @@ const EmployeeRegister = () => {
   const [showDatePickerJoining, setShowDatePickerJoining] = useState(false);
   const [showDatePickerBirth, setShowDatePickerBirth] = useState(false);
   const [dateofjoining, setDateofjoining] = useState(new Date());
-  const [dateofbirth, setDateofbirth] = useState(new Date());
+  // const [dateofbirth, setDateofbirth] = useState(new Date());
   const [showDatePickerExpiry, setShowDatePickerExpiry] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [designations, setDesignations] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [states, setStates] = useState([]);
+
+  useEffect(() => {
+    const formdata = new FormData();
+    formdata.append("StateId", "-1");
+    formdata.append("DesigantionID", "-1");
+    formdata.append("DepartmentId", "-1");
+    formdata.append("Status", "Z");
+    formdata.append("UserToken", "");
+    formdata.append("IP", "");
+    formdata.append("MAC", "");
+    formdata.append("UserId", "");
+    formdata.append("GeoLocation", "");
+
+    getDesignationService(formdata)
+      .then((res) => {
+        // console.log(res.data);
+        setDesignations(res.data.result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+    getDepartmentService(formdata)
+      .then((res) => {
+        // console.log(res.data);
+        setDepartments(res.data.result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+    getStateService(formdata)
+      .then((res) => {
+        console.log(res.data?.result)
+        setStates(res.data?.result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
 
   const getUserData = async () => {
     try {
@@ -106,8 +154,9 @@ const EmployeeRegister = () => {
   };
 
   const onSubmit = (data) => {
-    data.imgUser = profileImage;
-    data.imgDocument = documentImage;
+    data.imgUser = "profileImage";
+    // data.imgDocument = documentImage;
+    console.log(data);
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
@@ -115,15 +164,17 @@ const EmployeeRegister = () => {
 
       // Format date fields as dd/mm/yyyy
       if (key === "DateofJoining" || key === "Dateofbirth") {
-        formData.append(key, formatDate(value));
-      } else if (key === "imgUser") {
-        // If imgUser is a local file URI (e.g., from ImagePicker), handle it like this:
-        formData.append("imgUser", {
-          uri: value,
-          type: "image/jpeg", // or detect from file
-          name: "user_image.jpg",
-        });
-      } else {
+        formData.append(key, new Date(value).toLocaleDateString());
+      }
+      // else if (key === "imgUser") {
+      //   // If imgUser is a local file URI (e.g., from ImagePicker), handle it like this:
+      //   formData.append("imgUser", {
+      //     uri: value,
+      //     type: "image/jpeg", // or detect from file
+      //     name: "user_image.jpg",
+      //   });
+      // }
+      else {
         formData.append(key, value.toString());
       }
     });
@@ -149,23 +200,23 @@ const EmployeeRegister = () => {
   const showBirthDatePicker = () => setShowDatePickerBirth(true);
   const showExpiryDatePicker = () => setShowDatePickerExpiry(true);
 
-  const onChangeJoiningDate = (event, selectedDate) => {
-    console.log(selectedDate, event);
-    const date = new Date(isoDate);
+  // const onChangeJoiningDate = (event, selectedDate) => {
+  //   console.log(selectedDate, event);
+  //   const date = new Date(isoDate);
 
-    const currentDate = date.toLocaleDateString();
-    setShowDatePickerJoining(Platform.OS === "ios");
-    setDateofjoining(currentDate);
-    setValue("DateofJoining", currentDate);
-    // control._fields.DateofJoining.onChange(currentDate);
-    // console.log("Joining Date", selectedDate, control._fields.DateofJoining);
-  };
+  //   const currentDate = date.toLocaleDateString();
+  //   setShowDatePickerJoining(Platform.OS === "ios");
+  //   // setDateofjoining(currentDate);
+  //   // setValue("DateofJoining", currentDate);
+  //   // control._fields.DateofJoining.onChange(currentDate);
+  //   // console.log("Joining Date", selectedDate, control._fields.DateofJoining);
+  // };
 
-  const onChangeBirthDate = (event, selectedDate) => {
-    const currentDate = selectedDate || control._formValues.Dateofbirth;
-    setShowDatePickerBirth(Platform.OS === "ios");
-    control._fields.Dateofbirth.onChange(currentDate);
-  };
+  // const onChangeBirthDate = (event, selectedDate) => {
+  //   const currentDate = selectedDate || control._formValues.Dateofbirth;
+  //   setShowDatePickerBirth(Platform.OS === "ios");
+  //   control._fields.Dateofbirth.onChange(currentDate);
+  // };
 
   const onChangeExpiryDate = (event, selectedDate) => {
     const currentDate = selectedDate || control._formValues.expiryDate;
@@ -354,7 +405,7 @@ const EmployeeRegister = () => {
           <Controller
             control={control}
             name="DateofJoining"
-            defaultValue={new Date()}
+            defaultValue={dateofjoining}
             render={({ field: { onChange, onBlur, value } }) => (
               <TouchableOpacity onPress={() => setShowDatePickerJoining(true)}>
                 <TextInput
@@ -368,14 +419,15 @@ const EmployeeRegister = () => {
                 {showDatePickerJoining && (
                   <DateTimePicker
                     testID="joiningDatePicker"
-                    value={value ? new Date(value) : new Date()}
+                    value={dateofjoining || new Date()} // Make sure it's always up to date
                     mode="date"
                     is24Hour={true}
                     display="default"
                     onChange={(event, selectedDate) => {
                       setShowDatePickerJoining(false);
                       if (selectedDate) {
-                        onChange(selectedDate);
+                        setDateofjoining(selectedDate); // Update local state
+                        onChange(selectedDate); // Pass the selected date to the form control
                       }
                     }}
                   />
@@ -383,7 +435,6 @@ const EmployeeRegister = () => {
               </TouchableOpacity>
             )}
           />
-
           {errors.DateofJoining && (
             <Text style={styles.error}>{errors.DateofJoining.message}</Text>
           )}
@@ -406,7 +457,7 @@ const EmployeeRegister = () => {
                 {showDatePickerBirth && (
                   <DateTimePicker
                     testID="birthDatePicker"
-                    value={control._formValues.Dateofbirth || new Date()}
+                    value={value}
                     mode="date"
                     is24Hour={true}
                     display="default"
@@ -472,9 +523,16 @@ const EmployeeRegister = () => {
                   style={styles.picker}
                   mode="dropdown"
                 >
-                  <Picker.Item label="Driver" value="1" />
-                  <Picker.Item label="Gun Man" value="2" />
-                  <Picker.Item label="Driver" value="3" />
+                  {designations &&
+                    designations.map((item) => {
+                      return (
+                        <Picker.Item
+                          label={item?.Designation}
+                          value={item?.DesignationID}
+                          key={item?.DesignationID}
+                        />
+                      );
+                    })}
                 </Picker>
               )}
             />
@@ -589,9 +647,16 @@ const EmployeeRegister = () => {
                   mode="dropdown" // Dropdown mode for better UI
                 >
                   <Picker.Item label="Select Department" value="" />
-                  <Picker.Item label="Account" value="1" />
-                  <Picker.Item label="Electrician" value="2" />
-                  <Picker.Item label="Other" value="3" />
+                  {departments &&
+                    departments?.map((item) => {
+                      return (
+                        <Picker.Item
+                          label={item.Department}
+                          value={item.DepartmentId}
+                          key={item.DepartmentId}
+                        />
+                      );
+                    })}
                 </Picker>
               )}
             />
@@ -700,11 +765,16 @@ const EmployeeRegister = () => {
                   style={styles.picker}
                   mode="dropdown"
                 >
-                  <Picker.Item label="Uttar Pradesh" value="1" />
-                  <Picker.Item label="Uttrakhand" value="2" />
-                  <Picker.Item label="Punjab" value="3" />
-                  <Picker.Item label="Delhi" value="4" />
-                  <Picker.Item label="Bihar" value="5" />
+                  {states &&
+                    states.map((item) => {
+                      return (
+                        <Picker.Item
+                          label={item?.State}
+                          value={item?.StateId}
+                          key={item?.StateId}
+                        />
+                      );
+                    })}
                 </Picker>
               )}
             />
