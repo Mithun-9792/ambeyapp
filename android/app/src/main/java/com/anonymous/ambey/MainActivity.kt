@@ -1,6 +1,5 @@
-import expo.modules.splashscreen.SplashScreenManager
 package com.anonymous.ambey
-
+import expo.modules.splashscreen.SplashScreenManager
 import android.os.Build
 import android.os.Bundle
 
