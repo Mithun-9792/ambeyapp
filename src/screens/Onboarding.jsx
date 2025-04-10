@@ -2,9 +2,22 @@ import React, { useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LottieView from "lottie-react-native";
+import { SCREENS } from "../constants/route";
 
 export default function OnboardingScreen({ navigation }) {
   const animation = useRef(null);
+  const getUserData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("userData");
+      if (jsonValue != null) {
+        const userData = JSON.parse(jsonValue);
+        navigation.replace(SCREENS.DASHBOARD);
+      }
+    } catch (error) {
+      console.error("Error retrieving user data", error);
+    }
+  };
+  getUserData()
   const handleGetStarted = async () => {
     await AsyncStorage.setItem("@viewedOnboarding", "true");
     navigation.replace("Login");

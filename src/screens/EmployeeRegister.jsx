@@ -30,7 +30,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const schema = yup.object().shape({
-  employeeCode: yup.string().required("Employee Code is required"),
+  // employeeCode: yup.string().required("Employee Code is required"),
   FullName: yup.string().required("Full Name is required"),
   MemberId: yup.string().required("Member Id is required"),
   // gender: yup.string().required("Gender is required"),
@@ -73,7 +73,7 @@ const EmployeeRegister = () => {
   const [documentImage, setDocumentImage] = useState(null);
   const [showDatePickerJoining, setShowDatePickerJoining] = useState(false);
   const [showDatePickerBirth, setShowDatePickerBirth] = useState(false);
-  const [dateofjoining, setDateofjoining] = useState(new Date());
+  // const [dateofjoining, setDateofjoining] = useState(new Date());
   // const [dateofbirth, setDateofbirth] = useState(new Date());
   const [showDatePickerExpiry, setShowDatePickerExpiry] = useState(false);
   const [userData, setUserData] = useState(null);
@@ -157,9 +157,7 @@ const EmployeeRegister = () => {
       if (jsonValue != null) {
         const userData = JSON.parse(jsonValue);
         setUserData(userData);
-        setValue("MemberId", userData.MemberId?.toString() || "");
-        setValue("FullName", userData.Name || "");
-        setValue("MobileNo", userData.Mobile || "");
+        setValue("MemberId", userData.MemberId?.toString() || "-1");
         setValue("UserId", userData.UserId || "");
         setValue("UserToken", userData.UserToken || "");
         setValue("IP", "130.202.522.0255");
@@ -188,22 +186,25 @@ const EmployeeRegister = () => {
   };
 
   const onSubmit = (data) => {
+    console.log(data.DateofJoining, data.Dateofbirth);
     data.imgUser = profileImage;
     const formData = new FormData();
 
     Object.entries(data).forEach(([key, value]) => {
       if (value === undefined || value === null) return;
-      if (key === "DateofJoining" || key === "Dateofbirth") {
-        formData.append(key, new Date(value).toLocaleDateString());
-      } else {
-        formData.append(key, value.toString());
-      }
+      formData.append(key, value.toString());
+      // if (key === "DateofJoining" || key === "Dateofbirth") {
+      //   formData.append(key, value);
+      // } else {
+      // }
     });
 
     registerService(formData)
       .then((res) => {
         console.log(res.data);
-        reset();
+        if (res.data?.ResponseStatus == 1) {
+          reset();
+        }
       })
       .catch((error) => {
         console.error("Error:", error);
@@ -285,7 +286,7 @@ const EmployeeRegister = () => {
             <Text style={styles.error}>{errors.RegistrationCode.message}</Text>
           )}
         </View>
-        <View style={styles.inputControl}>
+        {/* <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Employee Code</Text>
           <Controller
             control={control}
@@ -303,7 +304,7 @@ const EmployeeRegister = () => {
           {errors.employeeCode && (
             <Text style={styles.error}>{errors.employeeCode.message}</Text>
           )}
-        </View>
+        </View> */}
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Title</Text>
           <View style={styles.pickerContainer}>
@@ -317,6 +318,7 @@ const EmployeeRegister = () => {
                   style={styles.picker}
                   mode="dropdown"
                 >
+                  <Picker.Item label="Select Title" value={""} />
                   {title &&
                     title.map((item) => {
                       return (
@@ -402,6 +404,7 @@ const EmployeeRegister = () => {
                   style={styles.picker}
                   mode="dropdown"
                 >
+                  <Picker.Item label="Select Gender" value="" />
                   <Picker.Item label="Male" value="M" />
                   <Picker.Item label="Female" value="F" />
                   <Picker.Item label="Other" value="O" />
@@ -426,7 +429,7 @@ const EmployeeRegister = () => {
             name="FatherHusbandName"
           />
         </View>
-        <View style={styles.inputControl}>
+        {/* <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Date of Joining</Text>
           <Controller
             control={control}
@@ -495,6 +498,43 @@ const EmployeeRegister = () => {
           {errors.DateofJoining && (
             <Text style={styles.error}>{errors.DateofJoining.message}</Text>
           )}
+        </View> */}
+        <View style={styles.inputControl}>
+          <Text style={styles.inputLabel}>Date of Joining</Text>
+          <Controller
+            control={control}
+            name="DateofJoining"
+            defaultValue={null}
+            render={({ field: { onChange, value } }) => (
+              <>
+                <TouchableOpacity
+                  onPress={() => setShowDatePickerJoining(true)}
+                >
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Select Date of Joining"
+                    value={value}
+                    editable={false}
+                    pointerEvents="none"
+                  />
+                </TouchableOpacity>
+
+                {showDatePickerJoining && (
+                  <DateTimePicker
+                    value={value ? new Date(value) : new Date()}
+                    mode="date"
+                    display="default"
+                    onChange={(event, selectedDate) => {
+                      setShowDatePickerJoining(false);
+                      if (event.type === "set" && selectedDate) {
+                        onChange(selectedDate.toLocaleDateString()); // store as ISO
+                      }
+                    }}
+                  />
+                )}
+              </>
+            )}
+          />
         </View>
 
         <View style={styles.inputControl}>
@@ -508,7 +548,7 @@ const EmployeeRegister = () => {
                   style={styles.input}
                   placeholder="Enter Date of Birth"
                   onBlur={onBlur}
-                  value={value ? new Date(value).toLocaleDateString() : ""}
+                  value={value}
                   editable={false}
                 />
                 {showDatePickerBirth && (
@@ -521,8 +561,8 @@ const EmployeeRegister = () => {
                     maximumDate={eighteenYearsAgo}
                     onChange={(event, selectedDate) => {
                       setShowDatePickerBirth(false);
-                      if (selectedDate) {
-                        onChange(selectedDate);
+                      if (event.type === "set" && selectedDate) {
+                        onChange(selectedDate.toLocaleDateString()); // store as ISO
                       }
                     }}
                   />
@@ -581,6 +621,7 @@ const EmployeeRegister = () => {
                   style={styles.picker}
                   mode="dropdown"
                 >
+                  <Picker.Item label={"Select Designation"} value={""} />
                   {designations &&
                     designations.map((item) => {
                       return (
@@ -830,6 +871,7 @@ const EmployeeRegister = () => {
                   style={styles.picker}
                   mode="dropdown"
                 >
+                  <Picker.Item label={"Select State"} value={""} />
                   {states &&
                     states.map((item) => {
                       return (
@@ -858,6 +900,7 @@ const EmployeeRegister = () => {
                   style={styles.picker}
                   mode="dropdown"
                 >
+                  <Picker.Item label={"Select City"} value={""} />
                   {cities &&
                     cities.map((item) => {
                       return (
