@@ -140,11 +140,12 @@ function EmployeeUploadDoc() {
       .then((res) => {
         // console.log("Employee Details:", res.data.result);
         setEmployeeData(res.data.result);
-        handleGetDoc();
+        
       })
       .catch((err) => {
         console.log("Error fetching employee details:", err);
       });
+      handleGetDoc();
   };
 
   const handleReset = () => {
@@ -170,38 +171,41 @@ function EmployeeUploadDoc() {
     }
   };
 
-  const onSubmit = (data) => {
-    const formData = new FormData();
-    formData.append("M01_MemberID", employeeData[0]?.MemberID);
-    formData.append("Regiscode", employeeData[0]?.RegistrationCode);
-    formData.append("VwDocID", data?.VwDocID);
-    formData.append("DocumentNo", data?.DocumentNo);
-    formData.append("ImageUrlPath", docImage); // Use base64 or file URI here
-    formData.append("DocExpiryDate", data?.ExpiryDate);
-    formData.append("UserToken", userData?.UserToken);
-    formData.append("IP", "324234234");
-    formData.append("MAC", "sdfsd43523fgfsdg");
-    formData.append("UserId", userData?.UserId);
-    formData.append("GeoLocation", "26.8467° N, 80.9462° E");
-    console.log(
-      employeeData[0]?.MemberID,
-      employeeData[0]?.RegistrationCode,
-      userData?.UserToken,
-      userData?.UserId
-    );
-    // return;
-    uploadEmpDocService(formData)
-      .then((res) => {
-        console.log(res.data);
-        if (res.data?.ResponseStatus == 1) {
-          handleGetDoc();
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
-  };
+const onSubmit = (data) => {
+  const formData = new FormData();
+  formData.append("M01_MemberID", employeeData[0]?.MemberID);
+  formData.append("Regiscode", employeeData[0]?.RegistrationCode);
+  formData.append("VwDocID", data?.VwDocID);
+  formData.append("DocumentNo", data?.DocumentNo);
+  formData.append("ImageUrlPath", docImage);
+  formData.append("DocExpiryDate", data?.ExpiryDate);
+  formData.append("UserToken", userData?.UserToken);
+  formData.append("IP", "324234234");
+  formData.append("MAC", "sdfsd43523fgfsdg");
+  formData.append("UserId", userData?.UserId);
+  formData.append("GeoLocation", "26.8467° N, 80.9462° E");
 
+  uploadEmpDocService(formData)
+    .then((res) => {
+      console.log("Upload response:", res.data);
+      if (res.data?.ResponseStatus === 1) {
+        // Reset form fields
+        reset({
+          VwDocID: "",
+          DocumentNo: "",
+          ExpiryDate: "",
+        });
+        setDocImage("");
+        setImgPreview("");
+
+        // Refresh document list
+        handleGetDoc();
+      }
+    })
+    .catch((err) => {
+      console.error("Error uploading document:", err);
+    });
+};
   const renderItem = ({ item }) => (
     <View style={styles.Tablerow}>
       <Text style={styles.cell}>{item.RegistrationCode}</Text>
@@ -412,6 +416,7 @@ function EmployeeUploadDoc() {
                 style={[styles.imagePickerContainer, { margin: 5 }]}
                 key={item?.MemberDocId}
               >
+                {console.log(item)}
                 <Text
                   style={{
                     color: "gray",
