@@ -83,6 +83,7 @@ const EmployeeRegister = () => {
   const [cities, setCities] = useState([]);
   const [relations, setRelations] = useState([]);
   const [title, setTitle] = useState([]);
+  const [picPreview, setPicPreview] = useState(null);
 
   useEffect(() => {
     const formdata = new FormData();
@@ -157,7 +158,7 @@ const EmployeeRegister = () => {
       if (jsonValue != null) {
         const userData = JSON.parse(jsonValue);
         setUserData(userData);
-        setValue("MemberId", userData.MemberId?.toString() || "-1");
+        setValue("MemberId", "-1");
         setValue("UserId", userData.UserId || "");
         setValue("UserToken", userData.UserToken || "");
         setValue("IP", "130.202.522.0255");
@@ -182,6 +183,7 @@ const EmployeeRegister = () => {
 
     if (!result.canceled) {
       setImage(result.assets[0].base64);
+      setPicPreview(result.assets[0].uri);
     }
   };
 
@@ -353,44 +355,7 @@ const EmployeeRegister = () => {
             <Text style={styles.error}>{errors.FullName.message}</Text>
           )}
         </View>
-        {/* <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Middle Name</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Middle Name"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="middleName"
-          />
-          {errors.middleName && (
-            <Text style={styles.error}>{errors.middleName.message}</Text>
-          )}
-        </View> */}
-        {/* <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Last Name</Text>{" "}
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Last Name"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="lastName"
-          />
-          {errors.lastName && (
-            <Text style={styles.error}>{errors.lastName.message}</Text>
-          )}
-        </View> */}
+
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Gender</Text>
           <View style={styles.pickerContainer}>
@@ -429,76 +394,7 @@ const EmployeeRegister = () => {
             name="FatherHusbandName"
           />
         </View>
-        {/* <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Date of Joining</Text>
-          <Controller
-            control={control}
-            name="DateofJoining"
-            defaultValue={dateofjoining}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <>
-                <TouchableOpacity
-                  onPress={() => setShowDatePickerJoining(true)}
-                >
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter Date of Joining"
-                    onBlur={onBlur}
-                    value={value ? new Date(value).toLocaleDateString() : ""}
-                    editable={false}
-                    pointerEvents="none" // Prevents keyboard popup
-                  />
-                </TouchableOpacity>
 
-                {showDatePickerJoining && (
-                  <DateTimePicker
-                    testID="joiningDatePicker"
-                    value={value ? new Date(value) : new Date()}
-                    mode="date"
-                    is24Hour={true}
-                    display="default"
-                    onChange={(event, selectedDate) => {
-                      setShowDatePickerJoining(false);
-                      if (event.type === "set" && selectedDate) {
-                        setDateofjoining(selectedDate); // Local state update (if needed)
-                        onChange(selectedDate.toISOString()); // Form value update
-                      }
-                    }}
-                  />
-                )}
-              </>
-            )}
-          />
-          {showDatePickerJoining && (
-            <Controller
-              control={control}
-              name="DateofJoining"
-              defaultValue={dateofjoining}
-              render={({ field: { onChange, onBlur, value } }) => (
-                <>
-                  <DateTimePicker
-                    testID="joiningDatePicker"
-                    value={value ? new Date(value) : dateofjoining}
-                    mode="date"
-                    is24Hour={true}
-                    display="default"
-                    onChange={(event, selectedDate) => {
-                      setShowDatePickerJoining(false);
-                      if (event.type === "set" && selectedDate) {
-                        setDateofjoining(selectedDate); // Local state update (if needed)
-                        onChange(selectedDate.toISOString()); // Form value update
-                      }
-                    }}
-                  />
-                </>
-              )}
-            />
-          )}
-
-          {errors.DateofJoining && (
-            <Text style={styles.error}>{errors.DateofJoining.message}</Text>
-          )}
-        </View> */}
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Date of Joining</Text>
           <Controller
@@ -700,9 +596,14 @@ const EmployeeRegister = () => {
           <Text style={styles.inputLabel}>Profile Image</Text>
           <View style={styles.imagePickerContainer}>
             <TouchableOpacity onPress={() => pickImage(setProfileImage)}>
-              <View style={styles.imagePlaceholder}>
-                {profileImage ? (
-                  <Image source={{ uri: profileImage }} style={styles.image} />
+              <View
+                style={[
+                  styles.imagePlaceholder,
+                  { height: picPreview ? 200 : 50 },
+                ]}
+              >
+                {picPreview ? (
+                  <Image source={{ uri: picPreview }} style={styles.image} />
                 ) : (
                   <Text>Choose Profile Image</Text>
                 )}
