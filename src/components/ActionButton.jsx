@@ -10,7 +10,7 @@ const ActionButton = ({ title, ImageName, onPress }) => {
       <View style={styles.iconWrapper}>
         <Icon name={ImageName} size={28} color="white" />
       </View>
-      <Text style={styles.text}>{title}</Text>
+      {title && <Text style={styles.text}>{title}</Text>}
     </TouchableOpacity>
   );
 };

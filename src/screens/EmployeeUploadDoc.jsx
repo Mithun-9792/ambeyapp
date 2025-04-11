@@ -27,6 +27,7 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CustomAlert from "../components/CustomAlert";
 import { Dimensions } from "react-native";
+import { SafeAreaView } from "react-native";
 
 const screenHeight = Dimensions.get("window").height;
 
@@ -46,8 +47,10 @@ function EmployeeUploadDoc() {
   const [showExpiryPicker, setShowExpiryPicker] = useState(false);
   const [imgPreview, setImgPreview] = useState("");
   const [userData, setUserData] = useState({});
-  const [isShow, setIsShow] = useState(false);
   const [userDocs, setUserDocs] = useState([]);
+  const [isShow, setIsShow] = useState(false);
+  const [alertType, setAlertType] = useState("");
+  const [alertMsg, setAlertMsg] = useState("");
 
   const {
     control,
@@ -115,6 +118,8 @@ function EmployeeUploadDoc() {
 
   const handleSearch = () => {
     if (registrationId.length === 0 && mobileNo.length === 0) {
+      setAlertType("info");
+      setAlertMsg("Enter Registration No. or Mobile No.");
       setIsShow(true);
       return;
     }
@@ -152,6 +157,7 @@ function EmployeeUploadDoc() {
     setMobileNo("");
     setIsSearched(false);
     setEmployeeData([]);
+    setUserDocs([]);
     reset();
   };
 
@@ -188,7 +194,9 @@ function EmployeeUploadDoc() {
       .then((res) => {
         console.log("Upload response:", res.data);
         if (res.data?.ResponseStatus == 1) {
-          // Reset form fields
+          setAlertType("success");
+          setAlertMsg(res?.data?.ResponseMessage);
+          setIsShow(true);
           reset({
             VwDocID: "",
             DocumentNo: "",
@@ -220,230 +228,237 @@ function EmployeeUploadDoc() {
   );
 
   return (
-    <ScrollView contentContainerStyle={{ minHeight: screenHeight - 100 }}>
-      <View style={styles.row}>
-        <TextInput
-          style={[styles.input, { width: 140 }]}
-          placeholder="Registration ID"
-          value={registrationId}
-          onChangeText={setRegistrationId}
-          readOnly={mobileNo.length > 0 || isSearched}
-        />
-        <Text
-          style={{ color: "gray", fontWeight: 500, verticalAlign: "middle" }}
-        >
-          OR
-        </Text>
-        <TextInput
-          style={[styles.input, { width: 140, marginLeft: 8 }]}
-          placeholder="Mobile No"
-          value={mobileNo}
-          onChangeText={setMobileNo}
-          keyboardType="phone-pad"
-          readOnly={registrationId.length > 0 || isSearched}
-        />
-      </View>
-      <CustomButton
-        btnText={isSearched ? "Reset" : "Search"}
-        style={[styles.btn, { marginTop: 5, marginBottom: 10 }]}
-        onPress={isSearched ? handleReset : handleSearch}
-      />
-      <ScrollView horizontal>
-        <View>
-          {/* Table Header */}
-          <View style={[styles.Tablerow, { backgroundColor: "#eee" }]}>
-            {[
-              "Registration Code",
-              "Name",
-              "MobileNo",
-              // "Edit",
-              // "View/Update Document",
-            ].map((heading, idx) => (
-              <Text key={idx} style={[styles.cell, styles.headerCell]}>
-                {heading}
-              </Text>
-            ))}
-          </View>
-
-          <FlatList
-            data={employeeData}
-            renderItem={renderItem}
-            keyExtractor={(item, index) => index.toString()}
+    <SafeAreaView>
+      <ScrollView contentContainerStyle={{ minHeight: screenHeight - 100 }}>
+        <View style={styles.row}>
+          <TextInput
+            style={[styles.input, { width: 140 }]}
+            placeholder="Registration ID"
+            value={registrationId}
+            onChangeText={setRegistrationId}
+            readOnly={mobileNo.length > 0 || isSearched}
+          />
+          <Text
+            style={{ color: "gray", fontWeight: 500, verticalAlign: "middle" }}
+          >
+            OR
+          </Text>
+          <TextInput
+            style={[styles.input, { width: 140, marginLeft: 8 }]}
+            placeholder="Mobile No"
+            value={mobileNo}
+            onChangeText={setMobileNo}
+            keyboardType="phone-pad"
+            readOnly={registrationId.length > 0 || isSearched}
           />
         </View>
-      </ScrollView>
-      {employeeData.length > 0 && (
-        <>
-          <Text
-            style={{
-              textAlign: "center",
-              fontSize: 18,
-              fontWeight: 600,
-              marginTop: 10,
-            }}
-          >
-            Upload Documents
-          </Text>
-          <View style={[styles.uploadSec]}>
-            <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Select Document Type</Text>
-              <View style={styles.pickerContainer}>
-                <Controller
-                  control={control}
-                  name="VwDocID"
-                  render={({ field: { onChange, value } }) => (
-                    <Picker
-                      selectedValue={value}
-                      onValueChange={onChange}
-                      style={styles.picker}
-                      mode="dropdown"
-                    >
-                      <Picker.Item label={"Select Document Type"} value={""} />
-                      {docType &&
-                        docType.map((item) => {
-                          return (
-                            <Picker.Item
-                              label={item?.DocumentType}
-                              value={item?.DocTypeId}
-                              key={item?.DocTypeId}
-                            />
-                          );
-                        })}
-                    </Picker>
-                  )}
-                />
-              </View>
-            </View>
-            <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Document No</Text>
-              <Controller
-                control={control}
-                render={({ field: { onChange, onBlur, value } }) => (
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter Document No"
-                    onBlur={onBlur}
-                    onChangeText={onChange}
-                    value={value}
-                  />
-                )}
-                name="DocumentNo"
-              />
-            </View>
-            <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Expiry Date</Text>
-              <Controller
-                control={control}
-                name="ExpiryDate"
-                defaultValue={null}
-                render={({ field: { onChange, value } }) => (
-                  <>
-                    <TouchableOpacity onPress={() => setShowExpiryPicker(true)}>
-                      <TextInput
-                        style={styles.input}
-                        placeholder="Select Expiry Date"
-                        value={value}
-                        editable={false}
-                        pointerEvents="none"
-                      />
-                    </TouchableOpacity>
-
-                    {showExpiryPicker && (
-                      <DateTimePicker
-                        value={value ? new Date(value) : new Date()}
-                        mode="date"
-                        display="default"
-                        onChange={(event, selectedDate) => {
-                          setShowExpiryPicker(false);
-                          if (event.type === "set" && selectedDate) {
-                            onChange(selectedDate.toLocaleDateString()); // store as ISO
-                          }
-                        }}
-                      />
-                    )}
-                  </>
-                )}
-              />
+        <CustomButton
+          btnText={isSearched ? "Reset" : "Search"}
+          style={[styles.btn, { marginTop: 5, marginBottom: 10 }]}
+          onPress={isSearched ? handleReset : handleSearch}
+        />
+        <ScrollView horizontal>
+          <View>
+            {/* Table Header */}
+            <View style={[styles.Tablerow, { backgroundColor: "#eee" }]}>
+              {[
+                "Registration Code",
+                "Name",
+                "MobileNo",
+                // "Edit",
+                // "View/Update Document",
+              ].map((heading, idx) => (
+                <Text key={idx} style={[styles.cell, styles.headerCell]}>
+                  {heading}
+                </Text>
+              ))}
             </View>
 
-            <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Document Image</Text>
-              <View style={styles.imagePickerContainer}>
-                <TouchableOpacity onPress={() => pickImage(setDocImage)}>
-                  <View
-                    style={[
-                      styles.imagePlaceholder,
-                      { height: imgPreview ? 200 : 50 },
-                    ]}
-                  >
-                    {imgPreview ? (
-                      <Image
-                        source={{ uri: imgPreview }}
-                        style={styles.image}
-                      />
-                    ) : (
-                      <Text style={{ color: "gray", fontWeight: 500 }}>
-                        Choose Profile Image
-                      </Text>
-                    )}
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </View>
-            <CustomButton
-              btnText="Upload Document"
-              style={[styles.btn]}
-              onPress={handleSubmit(onSubmit)}
+            <FlatList
+              data={employeeData}
+              renderItem={renderItem}
+              keyExtractor={(item, index) => index.toString()}
             />
           </View>
-        </>
-      )}
-      {userDocs.length > 0 && (
-        <View>
-          <Text
-            style={{
-              textAlign: "center",
-              fontSize: 18,
-              fontWeight: 600,
-            }}
-          >
-            Here is your uploaded documents
-          </Text>
-          {userDocs.map((item, index) => {
-            return (
-              <View
-                style={[styles.imagePickerContainer, { margin: 5 }]}
-                key={item?.MemberDocId}
-              >
-                {console.log(item)}
-                <Text
-                  style={{
-                    color: "gray",
-                    fontWeight: 500,
-                    marginLeft: "5%",
-                    fontSize: 16,
-                  }}
-                >
-                  {item?.DocType}
-                </Text>
-                <View style={[styles.imagePlaceholder, { height: 200 }]}>
-                  <Image
-                    source={{ uri: item?.AndriodPhotoPath2 }}
-                    style={[styles.image, { padding: 5 }]}
+        </ScrollView>
+        {employeeData.length > 0 && (
+          <>
+            <Text
+              style={{
+                textAlign: "center",
+                fontSize: 18,
+                fontWeight: 600,
+                marginTop: 10,
+              }}
+            >
+              Upload Documents
+            </Text>
+            <View style={[styles.uploadSec]}>
+              <View style={styles.inputControl}>
+                <Text style={styles.inputLabel}>Select Document Type</Text>
+                <View style={styles.pickerContainer}>
+                  <Controller
+                    control={control}
+                    name="VwDocID"
+                    render={({ field: { onChange, value } }) => (
+                      <Picker
+                        selectedValue={value}
+                        onValueChange={onChange}
+                        style={styles.picker}
+                        mode="dropdown"
+                      >
+                        <Picker.Item
+                          label={"Select Document Type"}
+                          value={""}
+                        />
+                        {docType &&
+                          docType.map((item) => {
+                            return (
+                              <Picker.Item
+                                label={item?.DocumentType}
+                                value={item?.DocTypeId}
+                                key={item?.DocTypeId}
+                              />
+                            );
+                          })}
+                      </Picker>
+                    )}
                   />
                 </View>
               </View>
-            );
-          })}
-        </View>
-      )}
+              <View style={styles.inputControl}>
+                <Text style={styles.inputLabel}>Document No</Text>
+                <Controller
+                  control={control}
+                  render={({ field: { onChange, onBlur, value } }) => (
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter Document No"
+                      onBlur={onBlur}
+                      onChangeText={onChange}
+                      value={value}
+                    />
+                  )}
+                  name="DocumentNo"
+                />
+              </View>
+              <View style={styles.inputControl}>
+                <Text style={styles.inputLabel}>Expiry Date</Text>
+                <Controller
+                  control={control}
+                  name="ExpiryDate"
+                  defaultValue={null}
+                  render={({ field: { onChange, value } }) => (
+                    <>
+                      <TouchableOpacity
+                        onPress={() => setShowExpiryPicker(true)}
+                      >
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Select Expiry Date"
+                          value={value}
+                          editable={false}
+                          pointerEvents="none"
+                        />
+                      </TouchableOpacity>
+
+                      {showExpiryPicker && (
+                        <DateTimePicker
+                          value={value ? new Date(value) : new Date()}
+                          mode="date"
+                          display="default"
+                          onChange={(event, selectedDate) => {
+                            setShowExpiryPicker(false);
+                            if (event.type === "set" && selectedDate) {
+                              onChange(selectedDate.toLocaleDateString()); // store as ISO
+                            }
+                          }}
+                        />
+                      )}
+                    </>
+                  )}
+                />
+              </View>
+
+              <View style={styles.inputControl}>
+                <Text style={styles.inputLabel}>Document Image</Text>
+                <View style={styles.imagePickerContainer}>
+                  <TouchableOpacity onPress={() => pickImage(setDocImage)}>
+                    <View
+                      style={[
+                        styles.imagePlaceholder,
+                        { height: imgPreview ? 200 : 50 },
+                      ]}
+                    >
+                      {imgPreview ? (
+                        <Image
+                          source={{ uri: imgPreview }}
+                          style={styles.image}
+                        />
+                      ) : (
+                        <Text style={{ color: "gray", fontWeight: 500 }}>
+                          Choose Doc Image
+                        </Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <CustomButton
+                btnText="Upload Document"
+                style={[styles.btn]}
+                onPress={handleSubmit(onSubmit)}
+              />
+            </View>
+          </>
+        )}
+        {userDocs.length > 0 && (
+          <View>
+            <Text
+              style={{
+                textAlign: "center",
+                fontSize: 18,
+                fontWeight: 600,
+              }}
+            >
+              Here is your uploaded documents
+            </Text>
+            {userDocs.map((item, index) => {
+              return (
+                <View
+                  style={[styles.imagePickerContainer, { margin: 5 }]}
+                  key={item?.MemberDocId}
+                >
+                  {console.log(item)}
+                  <Text
+                    style={{
+                      color: "gray",
+                      fontWeight: 500,
+                      marginLeft: "5%",
+                      fontSize: 16,
+                    }}
+                  >
+                    {item?.DocType}
+                  </Text>
+                  <View style={[styles.imagePlaceholder, { height: 200 }]}>
+                    <Image
+                      source={{ uri: item?.AndriodPhotoPath2 }}
+                      style={[styles.image, { padding: 5 }]}
+                    />
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        )}
+      </ScrollView>
       <CustomAlert
         visible={isShow}
-        message={"Enter Registration No. or Mobile No."}
-        type={"warning"}
+        message={alertMsg}
+        type={alertType}
         setVisible={setIsShow}
       />
-    </ScrollView>
+    </SafeAreaView>
   );
 }
 

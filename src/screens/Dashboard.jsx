@@ -90,13 +90,18 @@ function Dashboard({ navigation }) {
         <ActionButton
           title="Employee Register"
           ImageName="user-plus"
-          onPress={() => navigation.push(SCREENS.EMPLOYEEREGISTER)}
+          onPress={() => navigation.push(SCREENS.EMPLOYEEREGISTRATION)}
         />
         <ActionButton
           title="Employee Upload Doc"
           ImageName="upload"
           onPress={() => navigation.push(SCREENS.EMPLOYEEUPLOADDOC)}
         />
+        {/* <ActionButton
+          title="Employee Upload Doc"
+          ImageName="upload"
+          onPress={() => navigation.push(SCREENS.EMPLOYEEREGISTRATION)}
+        /> */}
       </View>
     </SafeAreaView>
   );

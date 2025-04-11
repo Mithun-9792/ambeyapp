@@ -1,23 +1,18 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  StyleSheet,
-  ScrollView,
-  Image,
-  TouchableOpacity,
-  Platform,
-  Pressable,
-} from "react-native";
+import { Image } from "react-native";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Text } from "react-native";
+import { ScrollView } from "react-native";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import * as ImagePicker from "expo-image-picker";
-import { Picker } from "@react-native-picker/picker";
+import { TouchableOpacity } from "react-native";
+import { TextInput } from "react-native";
+import { StyleSheet } from "react-native";
+import { View } from "react-native";
 import CustomButton from "../components/CustomButton";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { Picker } from "@react-native-picker/picker";
 import {
   getCityService,
   getDepartmentService,
@@ -28,37 +23,23 @@ import {
   registerService,
 } from "../services/auth.services";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import MyModal from "../components/CenterViewModal";
 
 const schema = yup.object().shape({
-  // employeeCode: yup.string().required("Employee Code is required"),
-  FullName: yup.string().required("Full Name is required"),
-  MemberId: yup.string().required("Member Id is required"),
-  // gender: yup.string().required("Gender is required"),
-  // fatherHusband: yup.string().required("Father/Husband Name is required"),
   DateofJoining: yup.date().required("Date of Joining is required"),
-  Dateofbirth: yup.date().required("Date of Birth is required"),
-  // cugno: yup.number(),
-  // AlternateMob: yup.string(),
-  // EMail: yup.string().email("Invalid email"),
-  // landlineNo: yup.string(),
-  // Pincode: yup.string(),
-  // LocationId: yup.string(),
-  // StaffTypeCode: yup.string().required("Staff Type is required"),
-  // designation: yup.string().required("Designation is required"),
-  // DepartmentId: yup.string().required("Department is required"),
-  // NomineeName: yup.string().required("Nominee Name is required"),
-  // nomineeRelation: yup.string().required("Nominee Relation is required"),
-  // NomineeAdharNo: yup.string(),
-  // residentialAddress: yup.string(),
-  // PermanentAddress: yup.string(),
-  // qualification: yup.string(),
-  // // qualification: yup.array().of(yup.string()),
-  // documentType: yup.string(),
-  // documentNo: yup.string(),
-  // expiryDate: yup.date(),
+  Dateofbirth: yup.date().required("Date of Joining is required"),
+  RegistrationCode: yup.string().required("Registraion Code is required"),
+  TitleId: yup.number().required("Please Select title"),
+  FullName: yup.string().required("Please enter you full name"),
+  EMail: yup
+    .string()
+    .email("Please enter a valid email address")
+    .required("Please enter your email"),
+  MobileNo: yup.number().required("Please enter mobile number"),
+  AlternateMob: yup.number(),
 });
 
-const EmployeeRegister = () => {
+function EmployeeRegistration() {
   const {
     control,
     handleSubmit,
@@ -68,15 +49,8 @@ const EmployeeRegister = () => {
   } = useForm({
     resolver: yupResolver(schema),
   });
-
-  const [profileImage, setProfileImage] = useState(null);
-  const [documentImage, setDocumentImage] = useState(null);
-  const [showDatePickerJoining, setShowDatePickerJoining] = useState(false);
-  const [showDatePickerBirth, setShowDatePickerBirth] = useState(false);
-  // const [dateofjoining, setDateofjoining] = useState(new Date());
-  // const [dateofbirth, setDateofbirth] = useState(new Date());
-  const [showDatePickerExpiry, setShowDatePickerExpiry] = useState(false);
-  const [userData, setUserData] = useState(null);
+  const eighteenYearsAgo = new Date();
+  eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
   const [designations, setDesignations] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [states, setStates] = useState([]);
@@ -84,6 +58,12 @@ const EmployeeRegister = () => {
   const [relations, setRelations] = useState([]);
   const [title, setTitle] = useState([]);
   const [picPreview, setPicPreview] = useState(null);
+  const [profileImage, setProfileImage] = useState(null);
+  const [date, setDate] = useState(new Date());
+  const [dob, setDob] = useState(eighteenYearsAgo);
+  const [show, setShow] = useState(false);
+  const [showDob, setShowDob] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const formdata = new FormData();
@@ -152,12 +132,26 @@ const EmployeeRegister = () => {
       });
   }, []);
 
+  const hanldeOnChange = (event, selectedDate) => {
+    const currentDate = selectedDate;
+    setShow(false);
+    setValue("DateofJoining", currentDate);
+    setDate(currentDate);
+  };
+
+  const hanldeDobOnChange = (event, selectedDate) => {
+    const currentDate = selectedDate;
+    setShowDob(false);
+    setValue("Dateofbirth", currentDate);
+    setDob(currentDate);
+  };
+
   const getUserData = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem("userData");
       if (jsonValue != null) {
         const userData = JSON.parse(jsonValue);
-        setUserData(userData);
+        // setUserData(userData);
         setValue("MemberId", "-1");
         setValue("UserId", userData.UserId || "");
         setValue("UserToken", userData.UserToken || "");
@@ -172,7 +166,27 @@ const EmployeeRegister = () => {
   };
 
   getUserData();
+
+  const launchCamera = async (setImage) => {
+    console.log("cameraaaa");
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true, // Allows cropping and editing the image
+      aspect: [4, 3], // Aspect ratio of the image
+      quality: 1, // Image quality (0 to 1)
+      base64: true, // Include base64 data in the result
+    });
+
+    if (!result.canceled) {
+      console.log(result.assets[0].uri);
+      setShowModal(result.canceled);
+      setImage(result.assets[0].base64);
+      setPicPreview(result.assets[0].uri);
+    }
+  };
+
   const pickImage = async (setImage) => {
+    console.log("gallery");
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
@@ -182,29 +196,31 @@ const EmployeeRegister = () => {
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].base64);
+      console.log(result.assets[0].uri);
+      setShowModal(result.canceled);
       setPicPreview(result.assets[0].uri);
+      setImage(result.assets[0].base64);
     }
   };
 
   const onSubmit = (data) => {
-    console.log(data.DateofJoining, data.Dateofbirth);
+    console.log(data);
     data.imgUser = profileImage;
     const formData = new FormData();
-
     Object.entries(data).forEach(([key, value]) => {
       if (value === undefined || value === null) return;
-      formData.append(key, value.toString());
-      // if (key === "DateofJoining" || key === "Dateofbirth") {
-      //   formData.append(key, value);
-      // } else {
-      // }
+      if (key === "DateofJoining" || key === "Dateofbirth") {
+        formData.append(key, value.toLocaleDateString());
+      } else {
+        formData.append(key, value.toString());
+      }
     });
-
     registerService(formData)
       .then((res) => {
         console.log(res.data);
         if (res.data?.ResponseStatus == 1) {
+          setPicPreview(null);
+          setProfileImage(null);
           reset();
         }
       })
@@ -213,69 +229,9 @@ const EmployeeRegister = () => {
       });
   };
 
-  const showJoiningDatePicker = () => setShowDatePickerJoining(true);
-  const showBirthDatePicker = () => setShowDatePickerBirth(true);
-  const showExpiryDatePicker = () => setShowDatePickerExpiry(true);
-
-  // const onChangeJoiningDate = (event, selectedDate) => {
-  //   console.log(selectedDate, event);
-  //   const date = new Date(isoDate);
-
-  //   const currentDate = date.toLocaleDateString();
-  //   setShowDatePickerJoining(Platform.OS === "ios");
-  //   // setDateofjoining(currentDate);
-  //   // setValue("DateofJoining", currentDate);
-  //   // control._fields.DateofJoining.onChange(currentDate);
-  //   // console.log("Joining Date", selectedDate, control._fields.DateofJoining);
-  // };
-
-  // const onChangeBirthDate = (event, selectedDate) => {
-  //   const currentDate = selectedDate || control._formValues.Dateofbirth;
-  //   setShowDatePickerBirth(Platform.OS === "ios");
-  //   control._fields.Dateofbirth.onChange(currentDate);
-  // };
-
-  const onChangeExpiryDate = (event, selectedDate) => {
-    const currentDate = selectedDate || control._formValues.expiryDate;
-    setShowDatePickerExpiry(Platform.OS === "ios");
-    control._fields.expiryDate.onChange(currentDate);
-  };
-
-  const eighteenYearsAgo = new Date();
-  eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
-
-  const [joinDate, setJoinDate] = useState(new Date(1598051730000));
-  const hanldeOnChange = (event, selectedDate) => {
-    const currentDate = selectedDate;
-    setShowDatePickerJoining(false);
-    setDate(currentDate);
-  };
-
   return (
     <ScrollView style={styles.container}>
-      {/* <View style={styles.headerContainer}>
-        <Text style={styles.sectionTitle}>Employee Registration</Text>
-      </View> */}
       <View style={{ marginBottom: 30 }}>
-        {/* <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Member Id</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Member Id"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="MemberId"
-          />
-          {errors.MemberId && (
-            <Text style={styles.error}>{errors.MemberId.message}</Text>
-          )}
-        </View> */}
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Registration Code</Text>
           <Controller
@@ -295,25 +251,6 @@ const EmployeeRegister = () => {
             <Text style={styles.error}>{errors.RegistrationCode.message}</Text>
           )}
         </View>
-        {/* <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Employee Code</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Employee Code"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="employeeCode"
-          />
-          {errors.employeeCode && (
-            <Text style={styles.error}>{errors.employeeCode.message}</Text>
-          )}
-        </View> */}
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Title</Text>
           <View style={styles.pickerContainer}>
@@ -342,6 +279,9 @@ const EmployeeRegister = () => {
               )}
             />
           </View>
+          {errors.TitleId && (
+            <Text style={styles.error}>{errors.TitleId.message}</Text>
+          )}
         </View>
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Full Name</Text>
@@ -362,7 +302,6 @@ const EmployeeRegister = () => {
             <Text style={styles.error}>{errors.FullName.message}</Text>
           )}
         </View>
-
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Gender</Text>
           <View style={styles.pickerContainer}>
@@ -386,6 +325,60 @@ const EmployeeRegister = () => {
           </View>
         </View>
         <View style={styles.inputControl}>
+          <Text style={styles.inputLabel}>Mobile No</Text>
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Mobile No"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+            name="MobileNo"
+          />
+          {errors.MobileNo && (
+            <Text style={styles.error}>{errors.MobileNo.message}</Text>
+          )}
+        </View>
+        <View style={styles.inputControl}>
+          <Text style={styles.inputLabel}>Alternate Mobile No</Text>
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Alternate Mobile"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+            name="AlternateMob"
+          />
+        </View>
+        <View style={styles.inputControl}>
+          <Text style={styles.inputLabel}>E-mail</Text>
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.input}
+                placeholder="Enter E-mail"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+            name="EMail"
+          />
+          {errors.EMail && (
+            <Text style={styles.error}>{errors.EMail.message}</Text>
+          )}
+        </View>
+        <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Father/Husband Name</Text>
           <Controller
             control={control}
@@ -401,7 +394,6 @@ const EmployeeRegister = () => {
             name="FatherHusbandName"
           />
         </View>
-
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Date of Joining</Text>
           <Controller
@@ -410,22 +402,20 @@ const EmployeeRegister = () => {
             defaultValue={null}
             render={({ field: { onChange, value } }) => (
               <>
-                <TouchableOpacity
-                  onPress={() => setShowDatePickerJoining(true)}
-                >
+                <TouchableOpacity onPress={() => setShow(true)}>
                   <TextInput
                     style={styles.input}
                     placeholder="Select Date of Joining"
-                    value={joinDate}
+                    value={date.toLocaleDateString()}
                     editable={false}
                     pointerEvents="none"
                   />
                 </TouchableOpacity>
 
-                {showDatePickerJoining && (
+                {show && (
                   <DateTimePicker
                     testID="dateTimePicker"
-                    value={joinDate}
+                    value={date}
                     mode={"date"}
                     is24Hour={true}
                     onChange={(event, selectedDate) => {
@@ -436,78 +426,50 @@ const EmployeeRegister = () => {
               </>
             )}
           />
+          {errors.DateofJoining && (
+            <Text style={styles.error}>{errors.DateofJoining.message}</Text>
+          )}
         </View>
-
         <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Date of Birth</Text>
+          <Text style={[styles.inputLabel, { marginBottom: 0 }]}>
+            Date of Birth
+          </Text>
+          <Text style={{ color: "red", fontSize: 12, marginHorizontal: 5 }}>
+            *Should be 18 years old
+          </Text>
           <Controller
             control={control}
             name="Dateofbirth"
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TouchableOpacity onPress={showBirthDatePicker}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter Date of Birth"
-                  onBlur={onBlur}
-                  value={value}
-                  editable={false}
-                />
-                {showDatePickerBirth && (
+            defaultValue={null}
+            render={({ field: { onChange, value } }) => (
+              <>
+                <TouchableOpacity onPress={() => setShowDob(true)}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Select Date of Joining"
+                    value={dob.toLocaleDateString()}
+                    editable={false}
+                    pointerEvents="none"
+                  />
+                </TouchableOpacity>
+
+                {showDob && (
                   <DateTimePicker
-                    testID="birthDatePicker"
-                    value={value ? new Date(value) : eighteenYearsAgo}
-                    mode="date"
+                    testID="dateTimePicker"
+                    value={dob}
+                    mode={"date"}
                     is24Hour={true}
-                    display="default"
-                    maximumDate={eighteenYearsAgo}
                     onChange={(event, selectedDate) => {
-                      setShowDatePickerBirth(false);
-                      if (event.type === "set" && selectedDate) {
-                        onChange(selectedDate.toLocaleDateString()); // store as ISO
-                      }
+                      hanldeDobOnChange(event, selectedDate);
                     }}
                   />
                 )}
-              </TouchableOpacity>
+              </>
             )}
           />
           {errors.Dateofbirth && (
             <Text style={styles.error}>{errors.Dateofbirth.message}</Text>
           )}
-        </View>
-
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Mobile No</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Mobile No"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="MobileNo"
-          />
-        </View>
-
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Alternate Mobile No</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter ALternate Mobile"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="AlternateMob"
-          />
         </View>
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Designation</Text>
@@ -538,42 +500,6 @@ const EmployeeRegister = () => {
             />
           </View>
         </View>
-
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>E-mail</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter E-mail"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="EMail"
-          />
-          {errors.EMail && (
-            <Text style={styles.error}>{errors.EMail.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Pin Code</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Pin Code"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="Pincode"
-          />
-        </View>
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Select Location</Text>
           <View style={styles.pickerContainer}>
@@ -594,26 +520,6 @@ const EmployeeRegister = () => {
                 </Picker>
               )}
             />
-          </View>
-        </View>
-        {/* Profile Image */}
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Profile Image</Text>
-          <View style={styles.imagePickerContainer}>
-            <TouchableOpacity onPress={() => pickImage(setProfileImage)}>
-              <View
-                style={[
-                  styles.imagePlaceholder,
-                  { height: picPreview ? 200 : 50 },
-                ]}
-              >
-                {picPreview ? (
-                  <Image source={{ uri: picPreview }} style={styles.image} />
-                ) : (
-                  <Text>Choose Profile Image</Text>
-                )}
-              </View>
-            </TouchableOpacity>
           </View>
         </View>
         <View style={styles.inputControl}>
@@ -667,8 +573,137 @@ const EmployeeRegister = () => {
             />
           </View>
         </View>
-
-
+        <View style={styles.inputControl}>
+          <Text style={styles.inputLabel}>Residential Address</Text>
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.textarea}
+                placeholder="Enter Residential Address"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                multiline={true} // Enable multiple lines
+                numberOfLines={4} // Set visible lines
+              />
+            )}
+            name="Address"
+          />
+        </View>
+        <View style={styles.inputControl}>
+          <Text style={styles.inputLabel}>Permanent Address</Text>
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.textarea}
+                placeholder="Permanent Address"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                multiline={true} // Enable multiple lines
+                numberOfLines={4} // Set visible lines
+              />
+            )}
+            name="PermanentAddress"
+          />
+        </View>
+        <View style={styles.inputControl}>
+          <Text style={styles.inputLabel}>Pin Code</Text>
+          <Controller
+            control={control}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Pin Code"
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+            name="Pincode"
+          />
+        </View>
+        <View style={styles.inputControl}>
+          <Text style={styles.inputLabel}>Select State</Text>
+          <View style={styles.pickerContainer}>
+            <Controller
+              control={control}
+              name="StateId"
+              render={({ field: { onChange, value } }) => (
+                <Picker
+                  selectedValue={value}
+                  onValueChange={onChange}
+                  style={styles.picker}
+                  mode="dropdown"
+                >
+                  <Picker.Item label={"Select State"} value={""} />
+                  {states &&
+                    states.map((item) => {
+                      return (
+                        <Picker.Item
+                          label={item?.State}
+                          value={item?.StateId}
+                          key={item?.StateId}
+                        />
+                      );
+                    })}
+                </Picker>
+              )}
+            />
+          </View>
+        </View>
+        <View style={styles.inputControl}>
+          <Text style={styles.inputLabel}>Select City</Text>
+          <View style={styles.pickerContainer}>
+            <Controller
+              control={control}
+              name="CityId"
+              render={({ field: { onChange, value } }) => (
+                <Picker
+                  selectedValue={value}
+                  onValueChange={onChange}
+                  style={styles.picker}
+                  mode="dropdown"
+                >
+                  <Picker.Item label={"Select City"} value={""} />
+                  {cities &&
+                    cities.map((item) => {
+                      return (
+                        <Picker.Item
+                          label={item?.City}
+                          value={item?.CityID}
+                          key={item?.CityID}
+                        />
+                      );
+                    })}
+                </Picker>
+              )}
+            />
+          </View>
+        </View>
+        <View style={styles.inputControl}>
+          <Text style={styles.inputLabel}>Profile Image</Text>
+          <View style={styles.imagePickerContainer}>
+            <TouchableOpacity onPress={() => setShowModal(true)}>
+              <View
+                style={[
+                  styles.imagePlaceholder,
+                  { height: picPreview ? 200 : 50 },
+                ]}
+              >
+                {picPreview ? (
+                  <Image source={{ uri: picPreview }} style={styles.image} />
+                ) : (
+                  <Text style={{ color: "gray", fontWeight: 500 }}>
+                    Choose Profile Image
+                  </Text>
+                )}
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Nominee Name</Text>
           <Controller
@@ -730,102 +765,6 @@ const EmployeeRegister = () => {
             name="NomineeAdharNo"
           />
         </View>
-
-
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Residential Address</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.textarea}
-                placeholder="Enter Residential Address"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                multiline={true} // Enable multiple lines
-                numberOfLines={4} // Set visible lines
-              />
-            )}
-            name="Address"
-          />
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Permanent Address</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.textarea}
-                placeholder="Permanent Address"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                multiline={true} // Enable multiple lines
-                numberOfLines={4} // Set visible lines
-              />
-            )}
-            name="PermanentAddress"
-          />
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Select State</Text>
-          <View style={styles.pickerContainer}>
-            <Controller
-              control={control}
-              name="StateId"
-              render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  style={styles.picker}
-                  mode="dropdown"
-                >
-                  <Picker.Item label={"Select State"} value={""} />
-                  {states &&
-                    states.map((item) => {
-                      return (
-                        <Picker.Item
-                          label={item?.State}
-                          value={item?.StateId}
-                          key={item?.StateId}
-                        />
-                      );
-                    })}
-                </Picker>
-              )}
-            />
-          </View>
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Select City</Text>
-          <View style={styles.pickerContainer}>
-            <Controller
-              control={control}
-              name="CityId"
-              render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  style={styles.picker}
-                  mode="dropdown"
-                >
-                  <Picker.Item label={"Select City"} value={""} />
-                  {cities &&
-                    cities.map((item) => {
-                      return (
-                        <Picker.Item
-                          label={item?.City}
-                          value={item?.CityID}
-                          key={item?.CityID}
-                        />
-                      );
-                    })}
-                </Picker>
-              )}
-            />
-          </View>
-        </View>
         <View
           style={{
             flexDirection: "row",
@@ -847,9 +786,15 @@ const EmployeeRegister = () => {
           />
         </View>
       </View>
+      <MyModal
+        modalVisible={showModal}
+        setModalVisible={setShowModal}
+        action1={launchCamera}
+        action2={pickImage}
+      />
     </ScrollView>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -967,5 +912,4 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
 });
-
-export default EmployeeRegister;
+export default EmployeeRegistration;
