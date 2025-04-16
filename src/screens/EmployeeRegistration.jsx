@@ -33,10 +33,17 @@ const schema = yup.object().shape({
   FullName: yup.string().required("Please enter you full name"),
   EMail: yup
     .string()
-    .email("Please enter a valid email address")
-    .required("Please enter your email"),
+    .email("Please enter a valid email address"),
+    // .required("Please enter your email"),
   MobileNo: yup.number().required("Please enter mobile number"),
   AlternateMob: yup.number(),
+  FatherHusbandName : yup.string().required("Father or husband name is required"),
+  DesignationId : yup.number().required("Please select designation"),
+  LocationId : yup.number().required("Please select location"),
+  StaffTypeCode : yup.number().required("Please select type"),
+  DepartmentId : yup.number().required("Please select department"),
+  Gender : yup.string().required("Please select gender")
+
 });
 
 function EmployeeRegistration() {
@@ -167,8 +174,7 @@ function EmployeeRegistration() {
 
   getUserData();
 
-  const launchCamera = async (setImage) => {
-    console.log("cameraaaa");
+  const launchCamera = async () => {
     let result = await ImagePicker.launchCameraAsync({
       mediaTypes: ["images"],
       allowsEditing: true, // Allows cropping and editing the image
@@ -178,15 +184,13 @@ function EmployeeRegistration() {
     });
 
     if (!result.canceled) {
-      console.log(result.assets[0].uri);
       setShowModal(result.canceled);
-      setImage(result.assets[0].base64);
       setPicPreview(result.assets[0].uri);
+      setProfileImage(result.assets[0].base64);
     }
   };
 
-  const pickImage = async (setImage) => {
-    console.log("gallery");
+  const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
@@ -196,10 +200,9 @@ function EmployeeRegistration() {
     });
 
     if (!result.canceled) {
-      console.log(result.assets[0].uri);
       setShowModal(result.canceled);
       setPicPreview(result.assets[0].uri);
-      setImage(result.assets[0].base64);
+      setProfileImage(result.assets[0].base64);
     }
   };
 
@@ -318,11 +321,13 @@ function EmployeeRegistration() {
                   <Picker.Item label="Select Gender" value="" />
                   <Picker.Item label="Male" value="M" />
                   <Picker.Item label="Female" value="F" />
-                  <Picker.Item label="Other" value="O" />
                 </Picker>
               )}
             />
           </View>
+          {errors.Gender && (
+            <Text style={styles.error}>{errors.Gender.message}</Text>
+          )}
         </View>
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Mobile No</Text>
@@ -358,6 +363,9 @@ function EmployeeRegistration() {
             )}
             name="AlternateMob"
           />
+           {errors.AlternateMob && (
+            <Text style={styles.error}>{errors.AlternateMob.message}</Text>
+          )}
         </View>
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>E-mail</Text>
@@ -393,6 +401,9 @@ function EmployeeRegistration() {
             )}
             name="FatherHusbandName"
           />
+           {errors.FatherHusbandName && (
+            <Text style={styles.error}>{errors.FatherHusbandName.message}</Text>
+          )}
         </View>
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Date of Joining</Text>
@@ -499,6 +510,9 @@ function EmployeeRegistration() {
               )}
             />
           </View>
+          {errors.DesignationId && (
+            <Text style={styles.error}>{errors.DesignationId.message}</Text>
+          )}
         </View>
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Select Location</Text>
@@ -521,6 +535,9 @@ function EmployeeRegistration() {
               )}
             />
           </View>
+          {errors.LocationId && (
+            <Text style={styles.error}>{errors.LocationId.message}</Text>
+          )}
         </View>
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Select Staff</Text>
@@ -536,13 +553,16 @@ function EmployeeRegistration() {
                   mode="dropdown" // Dropdown mode for better UI
                 >
                   <Picker.Item label="Select Staff Type" value="" />
-                  <Picker.Item label="Office" value="office" />
-                  <Picker.Item label="Field" value="field" />
+                  <Picker.Item label="Office" value="OS" />
+                  <Picker.Item label="Field Staff" value="FS" />
                   {/* <Picker.Item label="Other" value="other" /> */}
                 </Picker>
               )}
             />
           </View>
+          {errors.StaffTypeCode && (
+            <Text style={styles.error}>{errors.StaffTypeCode.message}</Text>
+          )}
         </View>
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Select Department ID</Text>
@@ -572,6 +592,9 @@ function EmployeeRegistration() {
               )}
             />
           </View>
+          {errors.DepartmentId && (
+            <Text style={styles.error}>{errors.DepartmentId.message}</Text>
+          )}
         </View>
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Residential Address</Text>

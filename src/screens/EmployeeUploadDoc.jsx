@@ -18,7 +18,7 @@ import {
   getEmployeeDetail,
   uploadEmpDocService,
 } from "../services/auth.services";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, set } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import * as ImagePicker from "expo-image-picker";
@@ -28,13 +28,15 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import CustomAlert from "../components/CustomAlert";
 import { Dimensions } from "react-native";
 import { SafeAreaView } from "react-native";
+import MyModal from "../components/CenterViewModal";
 
 const screenHeight = Dimensions.get("window").height;
 
 const schema = yup.object().shape({
-  VwDocID: yup.string(),
-  DocumentNo: yup.string(),
-  ImageUrlPath: yup.string(),
+  VwDocID: yup.string().required("Select Doc type"),
+  DocumentNo: yup.string().required("Enter Doc number"),
+  DocExpiryDate: yup.string().required("Select Expiry date"),
+  ImageUrlPath: yup.string().required("Select document image"),
 });
 
 function EmployeeUploadDoc() {
@@ -45,12 +47,15 @@ function EmployeeUploadDoc() {
   const [docImage, setDocImage] = useState("");
   const [docType, setDocType] = useState([]);
   const [showExpiryPicker, setShowExpiryPicker] = useState(false);
+  const [expireDate, setExpireDate] = useState(new Date());
   const [imgPreview, setImgPreview] = useState("");
   const [userData, setUserData] = useState({});
   const [userDocs, setUserDocs] = useState([]);
   const [isShow, setIsShow] = useState(false);
   const [alertType, setAlertType] = useState("");
   const [alertMsg, setAlertMsg] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [imgErrorMsg, setImgErrorMsg] = useState("");
 
   const {
     control,
@@ -158,10 +163,32 @@ function EmployeeUploadDoc() {
     setIsSearched(false);
     setEmployeeData([]);
     setUserDocs([]);
+    setDocImage("");
+    setImgPreview("");
     reset();
   };
 
-  const pickImage = async (setImage) => {
+  const launchCamera = async () => {
+    let result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+      base64: true,
+    });
+
+    if (!result.canceled) {
+      setShowModal(result.canceled);
+      setImgPreview(result.assets[0].uri);
+      setDocImage(result.assets[0].base64);
+      setValue("ImageUrlPath", result.assets[0].base64, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  };
+
+  const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
       allowsEditing: true,
@@ -171,19 +198,25 @@ function EmployeeUploadDoc() {
     });
 
     if (!result.canceled) {
+      setShowModal(result.canceled);
       setImgPreview(result.assets[0].uri);
-      setImage(result.assets[0].base64);
+      setDocImage(result.assets[0].base64);
+      setValue("ImageUrlPath", result.assets[0].base64, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
     }
   };
 
   const onSubmit = (data) => {
+    console.log(data?.DocExpiryDate)
     const formData = new FormData();
     formData.append("M01_MemberID", employeeData[0]?.MemberID);
     formData.append("Regiscode", employeeData[0]?.RegistrationCode);
     formData.append("VwDocID", data?.VwDocID);
     formData.append("DocumentNo", data?.DocumentNo);
     formData.append("ImageUrlPath", docImage);
-    formData.append("DocExpiryDate", data?.ExpiryDate);
+    formData.append("DocExpiryDate", data?.DocExpiryDate);
     formData.append("UserToken", userData?.UserToken);
     formData.append("IP", "324234234");
     formData.append("MAC", "sdfsd43523fgfsdg");
@@ -325,6 +358,9 @@ function EmployeeUploadDoc() {
                     )}
                   />
                 </View>
+                {errors.VwDocID && (
+                  <Text style={styles.error}>{errors.VwDocID.message}</Text>
+                )}
               </View>
               <View style={styles.inputControl}>
                 <Text style={styles.inputLabel}>Document No</Text>
@@ -341,6 +377,9 @@ function EmployeeUploadDoc() {
                   )}
                   name="DocumentNo"
                 />
+                {errors.DocumentNo && (
+                  <Text style={styles.error}>{errors.DocumentNo.message}</Text>
+                )}
               </View>
               <View style={styles.inputControl}>
                 <Text style={styles.inputLabel}>Expiry Date</Text>
@@ -356,7 +395,7 @@ function EmployeeUploadDoc() {
                         <TextInput
                           style={styles.input}
                           placeholder="Select Expiry Date"
-                          value={value}
+                          value={expireDate.toLocaleDateString()}
                           editable={false}
                           pointerEvents="none"
                         />
@@ -364,13 +403,22 @@ function EmployeeUploadDoc() {
 
                       {showExpiryPicker && (
                         <DateTimePicker
-                          value={value ? new Date(value) : new Date()}
+                          value={expireDate}
                           mode="date"
                           display="default"
                           onChange={(event, selectedDate) => {
                             setShowExpiryPicker(false);
                             if (event.type === "set" && selectedDate) {
-                              onChange(selectedDate.toLocaleDateString()); // store as ISO
+                              const currentDate = selectedDate;
+                              setExpireDate(currentDate);
+                              setValue(
+                                "DocExpiryDate",
+                                currentDate.toLocaleDateString(),
+                                {
+                                  shouldValidate: true, // ✅ triggers validation
+                                  shouldDirty: true, // ✅ marks it as user-edited
+                                }
+                              );
                             }
                           }}
                         />
@@ -378,12 +426,17 @@ function EmployeeUploadDoc() {
                     </>
                   )}
                 />
+                {errors.DocExpiryDate && (
+                  <Text style={styles.error}>
+                    {errors.DocExpiryDate.message}
+                  </Text>
+                )}
               </View>
 
               <View style={styles.inputControl}>
                 <Text style={styles.inputLabel}>Document Image</Text>
                 <View style={styles.imagePickerContainer}>
-                  <TouchableOpacity onPress={() => pickImage(setDocImage)}>
+                  <TouchableOpacity onPress={() => setShowModal(true)}>
                     <View
                       style={[
                         styles.imagePlaceholder,
@@ -403,6 +456,11 @@ function EmployeeUploadDoc() {
                     </View>
                   </TouchableOpacity>
                 </View>
+                {errors.ImageUrlPath && (
+                  <Text style={styles.error}>
+                    {errors.ImageUrlPath.message}
+                  </Text>
+                )}
               </View>
               <CustomButton
                 btnText="Upload Document"
@@ -457,6 +515,12 @@ function EmployeeUploadDoc() {
         message={alertMsg}
         type={alertType}
         setVisible={setIsShow}
+      />
+      <MyModal
+        modalVisible={showModal}
+        setModalVisible={setShowModal}
+        action1={launchCamera}
+        action2={pickImage}
       />
     </SafeAreaView>
   );
