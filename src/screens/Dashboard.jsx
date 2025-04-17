@@ -90,18 +90,21 @@ function Dashboard({ navigation }) {
         <ActionButton
           title="Employee Register"
           ImageName="user-plus"
-          onPress={() => navigation.push(SCREENS.EMPLOYEEREGISTRATION)}
+          onPress={() =>
+            navigation.push(SCREENS.EMPLOYEEREGISTRATION, { isNew: true })
+          }
         />
         <ActionButton
           title="Employee Upload Doc"
           ImageName="upload"
           onPress={() => navigation.push(SCREENS.EMPLOYEEUPLOADDOC)}
         />
-        {/* <ActionButton
-          title="Employee Upload Doc"
-          ImageName="upload"
-          onPress={() => navigation.push(SCREENS.EMPLOYEEREGISTRATION)}
-        /> */}
+
+        <ActionButton
+          title="User Report"
+          ImageName="newspaper-o"
+          onPress={() => navigation.push(SCREENS.USERREPORT)}
+        />
       </View>
     </SafeAreaView>
   );
@@ -152,6 +155,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginHorizontal: 20,
+    flexWrap: "wrap",
   },
 });
 

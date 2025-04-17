@@ -24,6 +24,7 @@ import {
 } from "../services/auth.services";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MyModal from "../components/CenterViewModal";
+import { useRoute } from "@react-navigation/native";
 
 const schema = yup.object().shape({
   DateofJoining: yup.date().required("Date of Joining is required"),
@@ -31,22 +32,23 @@ const schema = yup.object().shape({
   RegistrationCode: yup.string().required("Registraion Code is required"),
   TitleId: yup.number().required("Please Select title"),
   FullName: yup.string().required("Please enter you full name"),
-  EMail: yup
-    .string()
-    .email("Please enter a valid email address"),
-    // .required("Please enter your email"),
+  EMail: yup.string().email("Please enter a valid email address"),
+  // .required("Please enter your email"),
   MobileNo: yup.number().required("Please enter mobile number"),
   AlternateMob: yup.number(),
-  FatherHusbandName : yup.string().required("Father or husband name is required"),
-  DesignationId : yup.number().required("Please select designation"),
-  LocationId : yup.number().required("Please select location"),
-  StaffTypeCode : yup.number().required("Please select type"),
-  DepartmentId : yup.number().required("Please select department"),
-  Gender : yup.string().required("Please select gender")
-
+  FatherHusbandName: yup
+    .string()
+    .required("Father or husband name is required"),
+  DesignationId: yup.number().required("Please select designation"),
+  LocationId: yup.number().required("Please select location"),
+  StaffTypeCode: yup.number().required("Please select type"),
+  DepartmentId: yup.number().required("Please select department"),
+  Gender: yup.string().required("Please select gender"),
 });
 
 function EmployeeRegistration() {
+  const route = useRoute();
+  const { isNew } = route.params || false;
   const {
     control,
     handleSubmit,
@@ -158,8 +160,7 @@ function EmployeeRegistration() {
       const jsonValue = await AsyncStorage.getItem("userData");
       if (jsonValue != null) {
         const userData = JSON.parse(jsonValue);
-        // setUserData(userData);
-        setValue("MemberId", "-1");
+        setValue("MemberId", isNew ? "-1" : userData.MemberId);
         setValue("UserId", userData.UserId || "");
         setValue("UserToken", userData.UserToken || "");
         setValue("IP", "130.202.522.0255");
@@ -363,7 +364,7 @@ function EmployeeRegistration() {
             )}
             name="AlternateMob"
           />
-           {errors.AlternateMob && (
+          {errors.AlternateMob && (
             <Text style={styles.error}>{errors.AlternateMob.message}</Text>
           )}
         </View>
@@ -401,7 +402,7 @@ function EmployeeRegistration() {
             )}
             name="FatherHusbandName"
           />
-           {errors.FatherHusbandName && (
+          {errors.FatherHusbandName && (
             <Text style={styles.error}>{errors.FatherHusbandName.message}</Text>
           )}
         </View>

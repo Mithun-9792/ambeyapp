@@ -7,6 +7,7 @@ import Dashboard from "./screens/Dashboard";
 import EmployeeUploadDoc from "./screens/EmployeeUploadDoc";
 import EmployeeRegistration from "./screens/EmployeeRegistration";
 import EmployeeRegister from "./screens/EmployeeRegister";
+import UserReport from "./screens/UserReport";
 
 const Stack = createNativeStackNavigator();
 
@@ -42,6 +43,11 @@ export default function Routes() {
         name={SCREENS.EMPLOYEEUPLOADDOC}
         options={{ headerShown: true, title: "Employee Upload Doc" }}
         component={EmployeeUploadDoc}
+      />
+      <Stack.Screen
+        name={SCREENS.USERREPORT}
+        options={{ headerShown: true, title: "User Report" }}
+        component={UserReport}
       />
     </Stack.Navigator>
   );

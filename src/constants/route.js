@@ -7,6 +7,7 @@ export const SCREENS = {
   DASHBOARD: "Dashboard",
   EMPLOYEEREGISTER: "EmployeeRegister",
   EMPLOYEEUPLOADDOC: "EmployeeUploadDoc",
-  EMPLOYEEREGISTRATION : "EmployeeRegistrarion"
+  EMPLOYEEREGISTRATION: "EmployeeRegistrarion",
+  USERREPORT: "UserReport",
   // Add more screens here
 };

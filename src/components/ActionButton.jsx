@@ -4,6 +4,7 @@ import React from "react";
 import { TouchableOpacity, Text, StyleSheet, View } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 
+
 const ActionButton = ({ title, ImageName, onPress }) => {
   return (
     <TouchableOpacity style={styles.button} onPress={onPress}>
@@ -18,9 +19,10 @@ const ActionButton = ({ title, ImageName, onPress }) => {
 const styles = StyleSheet.create({
   button: {
     backgroundColor: "orange",
-    flex: 1,
+    // flex: 1,
+    width: "26%",
     margin: 10,
-    paddingVertical: 20,
+    padding: 10,
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
