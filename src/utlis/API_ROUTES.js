@@ -7,6 +7,7 @@ const API_ROUTES = {
   GET_DEPARTMENT_API: `${BASS_URL}/APIServices/GetDepartment.aspx`,
   GET_STATE_API: `${BASS_URL}/APIServices/GetStateData.aspx`,
   GET_CITY_API: `${BASS_URL}/APIServices/GetCityData.aspx`,
+  GET_LOCATION_API: `${BASS_URL}/APIServices/Get_LocationData.aspx`,
   GET_NOMINEE_RELATION: `${BASS_URL}/APIServices/Get_NomineeRelation.aspx`,
   GET_TITLE_API: `${BASS_URL}/APIServices/GetTitle.aspx`,
   GET_EMPLOYEE_DETAILS_API: `${BASS_URL}/APIServices/GetEmployeeDetail.aspx`,

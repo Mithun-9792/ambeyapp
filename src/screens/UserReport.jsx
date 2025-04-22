@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dimensions,
   SafeAreaView,
@@ -10,6 +10,11 @@ import {
 } from "react-native";
 import CustomButton from "../components/CustomButton";
 import { Picker } from "@react-native-picker/picker";
+import {
+  getDepartmentService,
+  getDesignationService,
+  getLocationsService,
+} from "../services/auth.services";
 const screenHeight = Dimensions.get("window").height;
 function UserReport() {
   const [registrationId, setRegistrationId] = useState("");
@@ -19,9 +24,56 @@ function UserReport() {
   const [department, setDepartment] = useState("");
   const [location, setLocation] = useState("");
   const [isSearched, setIsSearched] = useState(false);
+  const [designations, setDesignations] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [locations, setLocations] = useState([]);
 
   const isAnyFieldFilled =
     registrationId || mobileNo || name || designation || department || location;
+
+  useEffect(() => {
+    const formdata = new FormData();
+    // formdata.append("NomnieeTypeId", "-1");
+    // formdata.append("TitleId", "-1");
+    // formdata.append("StateId", "-1");
+    // formdata.append("CityId", "-1");
+    formdata.append("LocationId", "-1");
+    formdata.append("DesigantionID", "-1");
+    formdata.append("DepartmentId", "-1");
+    formdata.append("Status", "Z");
+    formdata.append("UserToken", "");
+    formdata.append("IP", "");
+    formdata.append("MAC", "");
+    formdata.append("UserId", "");
+    formdata.append("GeoLocation", "");
+
+    getDesignationService(formdata)
+      .then((res) => {
+        // console.log(res.data);
+        setDesignations(res.data.result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+    getDepartmentService(formdata)
+      .then((res) => {
+        // console.log(res.data);
+        setDepartments(res.data.result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+
+    getLocationsService(formdata)
+      .then((res) => {
+        // console.log(res.data?.result);
+        setLocations(res.data?.result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
 
   const handleFilter = () => {
     // Perform your filter logic here
@@ -97,9 +149,16 @@ function UserReport() {
               mode="dropdown"
             >
               <Picker.Item label="Select Designation" value={""} />
-              <Picker.Item label="Director" value="Director" />
-              <Picker.Item label="Driver" value="Driver" />
-              <Picker.Item label="Accountant" value="Accountant" />
+              {designations &&
+                designations.map((item) => {
+                  return (
+                    <Picker.Item
+                      label={item?.Designation}
+                      value={item?.DesignationID}
+                      key={item?.DesignationID}
+                    />
+                  );
+                })}
             </Picker>
           </View>
           <View style={styles.pickerContainer}>
@@ -111,9 +170,16 @@ function UserReport() {
               mode="dropdown"
             >
               <Picker.Item label="Select Location" value={""} />
-              <Picker.Item label="Lucknow" value="Lucknow" />
-              <Picker.Item label="Kanpur" value="Kanpur" />
-              <Picker.Item label="Hardoi" value="Hardoi" />
+              {locations &&
+                locations.map((item) => {
+                  return (
+                    <Picker.Item
+                      label={item?.Location}
+                      value={item?.LocationId}
+                      key={item?.LocationId}
+                    />
+                  );
+                })}
             </Picker>
           </View>
           <Text
@@ -130,9 +196,16 @@ function UserReport() {
               mode="dropdown"
             >
               <Picker.Item label="Select Department" value={""} />
-              <Picker.Item label="Accounts" value="Accounts" />
-              <Picker.Item label="HR" value="HR" />
-              <Picker.Item label="IT" value="IT" />
+              {departments &&
+                departments.map((item) => {
+                  return (
+                    <Picker.Item
+                      label={item.Department}
+                      value={item.DepartmentId}
+                      key={item.DepartmentId}
+                    />
+                  );
+                })}
             </Picker>
           </View>
         </View>

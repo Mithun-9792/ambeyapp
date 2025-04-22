@@ -17,6 +17,7 @@ import {
   getCityService,
   getDepartmentService,
   getDesignationService,
+  getLocationsService,
   getNomineeRelationService,
   getStateService,
   getTitleService,
@@ -64,6 +65,7 @@ function EmployeeRegistration() {
   const [departments, setDepartments] = useState([]);
   const [states, setStates] = useState([]);
   const [cities, setCities] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [relations, setRelations] = useState([]);
   const [title, setTitle] = useState([]);
   const [picPreview, setPicPreview] = useState(null);
@@ -80,6 +82,7 @@ function EmployeeRegistration() {
     formdata.append("TitleId", "-1");
     formdata.append("StateId", "-1");
     formdata.append("CityId", "-1");
+    formdata.append("LocationId", "-1");
     formdata.append("DesigantionID", "-1");
     formdata.append("DepartmentId", "-1");
     formdata.append("Status", "Z");
@@ -119,6 +122,14 @@ function EmployeeRegistration() {
       .then((res) => {
         // console.log(res.data?.result)
         setCities(res.data?.result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    getLocationsService(formdata)
+      .then((res) => {
+        // console.log(res.data?.result);
+        setLocations(res.data?.result);
       })
       .catch((err) => {
         console.log(err);
@@ -529,9 +540,17 @@ function EmployeeRegistration() {
                   mode="dropdown" // Dropdown mode for better UI
                 >
                   <Picker.Item label="Select Location" value="" />
-                  <Picker.Item label="Lucknow" value="1" />
-                  <Picker.Item label="Kanpur" value="2" />
-                  <Picker.Item label="Other" value="3" />
+
+                  {locations &&
+                    locations.map((item) => {
+                      return (
+                        <Picker.Item
+                          label={item?.Location}
+                          value={item?.LocationId}
+                          key={item?.LocationId}
+                        />
+                      );
+                    })}
                 </Picker>
               )}
             />

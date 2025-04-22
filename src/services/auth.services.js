@@ -47,6 +47,14 @@ export const getCityService = async (data) => {
     },
   });
 };
+
+export const getLocationsService = async (data) => {
+  return await axios.post(API_ROUTES.GET_LOCATION_API, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
 export const getNomineeRelationService = async (data) => {
   return await axios.post(API_ROUTES.GET_NOMINEE_RELATION, data, {
     headers: {
