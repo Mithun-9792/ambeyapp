@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import {
   Dimensions,
+  FlatList,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import CustomButton from "../components/CustomButton";
@@ -15,8 +17,9 @@ import {
   getDesignationService,
   getLocationsService,
 } from "../services/auth.services";
+import { SCREENS } from "../constants/route";
 const screenHeight = Dimensions.get("window").height;
-function UserReport() {
+function UserReport({ navigation }) {
   const [registrationId, setRegistrationId] = useState("");
   const [mobileNo, setMobileNo] = useState("");
   const [name, setName] = useState("");
@@ -98,6 +101,33 @@ function UserReport() {
     setLocation("");
     setIsSearched(false);
   };
+
+  const employeeData = [
+    {
+      RegistrationCode: "12345",
+      Name: "John Doe",
+      MobileNo: "1234567890",
+    },
+  ];
+
+  const renderItem = ({ item }) => (
+    <View style={styles.Tablerow}>
+      <Text style={styles.cell}>{item.RegistrationCode}</Text>
+      <Text style={styles.cell}>{item.Name}</Text>
+      <Text style={styles.cell}>{item.MobileNo}</Text>
+
+      <CustomButton
+        btnText={"Edit"}
+        style={[styles.btn, styles.cell, { marginTop: 5, marginBottom: 10 }]}
+        onPress={isSearched ? handleReset : handleFilter}
+      />
+      <CustomButton
+        btnText={"View/Update"}
+        style={[styles.btn, styles.cell, { marginTop: 5, marginBottom: 10 }]}
+        onPress={isSearched ? handleReset : handleFilter}
+      />
+    </View>
+  );
 
   return (
     <SafeAreaView>
@@ -214,6 +244,53 @@ function UserReport() {
           style={[styles.btn, { marginTop: 5, marginBottom: 10 }]}
           onPress={isSearched ? handleReset : handleFilter}
         />
+
+        <ScrollView horizontal>
+          <View>
+            {/* Table Header */}
+            <View style={[styles.Tablerow, { backgroundColor: "#eee" }]}>
+              {[
+                "Registration Code",
+                "Name",
+                "Mobile No",
+                "Edit",
+                "View/Update Doc",
+              ].map((heading, idx) => (
+                <Text key={idx} style={[styles.cell, styles.headerCell]}>
+                  {heading}
+                </Text>
+              ))}
+            </View>
+
+            {/* Table Body (Row Data) */}
+            {employeeData.map((item, index) => (
+              <View key={index} style={styles.Tablerow}>
+                <Text style={styles.cell}>{item.RegistrationCode}</Text>
+                <Text style={styles.cell}>{item.Name}</Text>
+                <Text style={styles.cell}>{item.MobileNo}</Text>
+
+                <View style={styles.cellWrapper}>
+                  <CustomButton
+                    btnText={"Edit"}
+                    style={styles.tableBtn}
+                    onPress={() =>
+                      navigation.push(SCREENS.EMPLOYEEREGISTRATION, {
+                        isNew: false,
+                      })
+                    }
+                  />
+                </View>
+                <View style={styles.cellWrapper}>
+                  <CustomButton
+                    btnText={"View/Update"}
+                    style={styles.tableBtn}
+                    onPress={isSearched ? handleReset : handleFilter}
+                  />
+                </View>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
       </ScrollView>
     </SafeAreaView>
   );
@@ -242,7 +319,7 @@ const styles = StyleSheet.create({
   btn: {
     backgroundColor: "orange",
     paddingVertical: 12,
-    paddingHorizontal: 15,
+    // paddingHorizontal: 15,
     borderRadius: 8,
   },
 
@@ -267,6 +344,38 @@ const styles = StyleSheet.create({
     height: 60,
     width: "100%",
     color: "#222",
+  },
+  Tablerow: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderColor: "#ccc",
+    paddingVertical: 6,
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  cell: {
+    minWidth: 140,
+    // paddingHorizontal: 5,
+    color: "#333",
+    textAlign: "center",
+  },
+  headerCell: {
+    fontWeight: "bold",
+  },
+  cellWrapper: {
+    width: 140,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 8,
+    // borderRightWidth: 1,
+    // borderColor: "#ccc",
+  },
+
+  tableBtn: {
+    backgroundColor: "orange",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
   },
 });
 

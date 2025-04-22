@@ -105,6 +105,11 @@ function Dashboard({ navigation }) {
           ImageName="newspaper-o"
           onPress={() => navigation.push(SCREENS.USERREPORT)}
         />
+        <ActionButton
+          title="User Report"
+          ImageName="file-text"
+          onPress={() => navigation.push(SCREENS.USERREPORT)}
+        />
       </View>
     </SafeAreaView>
   );
