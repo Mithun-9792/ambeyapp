@@ -29,6 +29,7 @@ import CustomAlert from "../components/CustomAlert";
 import { Dimensions } from "react-native";
 import { SafeAreaView } from "react-native";
 import MyModal from "../components/CenterViewModal";
+import { useRoute } from "@react-navigation/native";
 
 const screenHeight = Dimensions.get("window").height;
 
@@ -40,7 +41,11 @@ const schema = yup.object().shape({
 });
 
 function EmployeeUploadDoc() {
-  const [registrationId, setRegistrationId] = useState("");
+  const route = useRoute();
+  const { userRegistrationId } = route.params;
+  const [registrationId, setRegistrationId] = useState(
+    userRegistrationId || ""
+  );
   const [mobileNo, setMobileNo] = useState("");
   const [isSearched, setIsSearched] = useState(false);
   const [employeeData, setEmployeeData] = useState([]);
@@ -55,7 +60,6 @@ function EmployeeUploadDoc() {
   const [alertType, setAlertType] = useState("");
   const [alertMsg, setAlertMsg] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [imgErrorMsg, setImgErrorMsg] = useState("");
 
   const {
     control,
@@ -98,6 +102,9 @@ function EmployeeUploadDoc() {
         console.error("Error fetching document types:", err);
       });
     getUserData();
+    if (userRegistrationId) {
+      handleSearch();
+    }
   }, []);
 
   const handleGetDoc = () => {
@@ -113,7 +120,7 @@ function EmployeeUploadDoc() {
 
     getEmpDoc(formData)
       .then((res) => {
-        console.log("doc", res.data?.result);
+        // console.log("doc", res.data?.result);
         setUserDocs(res.data?.result);
       })
       .catch((err) => {
@@ -121,7 +128,7 @@ function EmployeeUploadDoc() {
       });
   };
 
-  const handleSearch = () => {
+  function handleSearch() {
     if (registrationId.length === 0 && mobileNo.length === 0) {
       setAlertType("info");
       setAlertMsg("Enter Registration No. or Mobile No.");
@@ -155,7 +162,7 @@ function EmployeeUploadDoc() {
         console.log("Error fetching employee details:", err);
       });
     handleGetDoc();
-  };
+  }
 
   const handleReset = () => {
     setRegistrationId("");
@@ -209,7 +216,7 @@ function EmployeeUploadDoc() {
   };
 
   const onSubmit = (data) => {
-    console.log(data?.DocExpiryDate)
+    console.log(data?.DocExpiryDate);
     const formData = new FormData();
     formData.append("M01_MemberID", employeeData[0]?.MemberID);
     formData.append("Regiscode", employeeData[0]?.RegistrationCode);
@@ -225,7 +232,7 @@ function EmployeeUploadDoc() {
 
     uploadEmpDocService(formData)
       .then((res) => {
-        console.log("Upload response:", res.data);
+        // console.log("Upload response:", res.data);
         if (res.data?.ResponseStatus == 1) {
           setAlertType("success");
           setAlertMsg(res?.data?.ResponseMessage);
@@ -240,6 +247,10 @@ function EmployeeUploadDoc() {
 
           // Refresh document list
           handleGetDoc();
+        }else{
+          setAlertType("info");
+          setAlertMsg(res?.data?.ResponseMessage);
+          setIsShow(true);
         }
       })
       .catch((err) => {
@@ -395,7 +406,7 @@ function EmployeeUploadDoc() {
                         <TextInput
                           style={styles.input}
                           placeholder="Select Expiry Date"
-                          value={expireDate.toLocaleDateString()}
+                          value={expireDate.toLocaleDateString('en-GB')}
                           editable={false}
                           pointerEvents="none"
                         />
@@ -413,7 +424,7 @@ function EmployeeUploadDoc() {
                               setExpireDate(currentDate);
                               setValue(
                                 "DocExpiryDate",
-                                currentDate.toLocaleDateString(),
+                                currentDate.toLocaleDateString('en-GB'),
                                 {
                                   shouldValidate: true, // ✅ triggers validation
                                   shouldDirty: true, // ✅ marks it as user-edited
@@ -487,7 +498,7 @@ function EmployeeUploadDoc() {
                   style={[styles.imagePickerContainer, { margin: 5 }]}
                   key={item?.MemberDocId}
                 >
-                  {console.log(item)}
+                  {/* {console.log(item)} */}
                   <Text
                     style={{
                       color: "gray",

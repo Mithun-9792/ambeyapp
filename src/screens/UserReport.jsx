@@ -15,9 +15,12 @@ import { Picker } from "@react-native-picker/picker";
 import {
   getDepartmentService,
   getDesignationService,
+  getEmployeeDetail,
   getLocationsService,
 } from "../services/auth.services";
 import { SCREENS } from "../constants/route";
+import CustomAlert from "../components/CustomAlert";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const screenHeight = Dimensions.get("window").height;
 function UserReport({ navigation }) {
   const [registrationId, setRegistrationId] = useState("");
@@ -30,9 +33,27 @@ function UserReport({ navigation }) {
   const [designations, setDesignations] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [isShow, setIsShow] = useState(false);
+  const [alertType, setAlertType] = useState("");
+  const [alertMsg, setAlertMsg] = useState("");
+  const [employeeData, setEmployeeData] = useState([]);
+  const [userData, setUserData] = useState({});
 
   const isAnyFieldFilled =
     registrationId || mobileNo || name || designation || department || location;
+
+  const getUserData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("userData");
+      if (jsonValue != null) {
+        const userData = JSON.parse(jsonValue);
+        setUserData(userData);
+        return userData;
+      }
+    } catch (error) {
+      console.error("Error retrieving user data", error);
+    }
+  };
 
   useEffect(() => {
     const formdata = new FormData();
@@ -76,20 +97,64 @@ function UserReport({ navigation }) {
       .catch((err) => {
         console.log(err);
       });
+    getUserData();
   }, []);
 
-  const handleFilter = () => {
-    // Perform your filter logic here
-    console.log("Filter clicked");
-    console.log("Registration ID:", registrationId);
-    console.log("Mobile No:", mobileNo);
-    console.log("Name:", name);
-    console.log("Designation 1:", designation);
-    console.log("Designation 2:", department);
-    console.log("Designation 3:", location);
+  // const handleFilter = () => {
+  //   // Perform your filter logic here
+  //   console.log("Filter clicked");
+  //   console.log("Registration ID:", registrationId);
+  //   console.log("Mobile No:", mobileNo);
+  //   console.log("Name:", name);
+  //   console.log("Designation 1:", designation);
+  //   console.log("Designation 2:", department);
+  //   console.log("Designation 3:", location);
 
-    // Set isSearched to true to indicate that the search has been performed
+  //   // Set isSearched to true to indicate that the search has been performed
+  //   setIsSearched(true);
+  // };
+  const handleFilter = () => {
+    if (
+      registrationId.length === 0 &&
+      mobileNo.length === 0 &&
+      name.length === 0 &&
+      designation.length === 0 &&
+      department.length === 0 &&
+      location.length === 0
+    ) {
+      setAlertType("info");
+      setAlertMsg("Please fill any field to filter data.");
+      setIsShow(true);
+      return;
+    }
+
+    console.log(location, "location", department, designation);
     setIsSearched(true);
+    const formData = new FormData();
+    formData.append("MemberID", "-1");
+    formData.append("Name", name || "");
+    formData.append("RegCode", registrationId);
+    formData.append("MobileNo", mobileNo);
+    formData.append("Status", "Z");
+    formData.append("M32_DepartmentId", parseInt(department) || -1);
+    formData.append("M14_DesignationID", parseInt(designation) || -1);
+    formData.append("M33_LocationId", parseInt(location) || -1);
+    formData.append("StaffTypeCode", "");
+    formData.append("UserToken", userData?.UserToken || "");
+    formData.append("UserId", userData.UserId || "");
+    formData.append("IP", "");
+    formData.append("MAC", "");
+    formData.append("DocTypeId", "-1");
+    formData.append("GeoLocation", "56.225551,58.5646");
+
+    getEmployeeDetail(formData)
+      .then((res) => {
+        // console.log("Employee Details:", res.data.result, res.data.result.length);
+        setEmployeeData(res.data.result);
+      })
+      .catch((err) => {
+        console.log("Error fetching employee details:", err);
+      });
   };
 
   const handleReset = () => {
@@ -100,15 +165,16 @@ function UserReport({ navigation }) {
     setDepartment("");
     setLocation("");
     setIsSearched(false);
+    setEmployeeData([]);
   };
 
-  const employeeData = [
-    {
-      RegistrationCode: "12345",
-      Name: "John Doe",
-      MobileNo: "1234567890",
-    },
-  ];
+  // const employeeData = [
+  //   {
+  //     RegistrationCode: "12345",
+  //     Name: "John Doe",
+  //     MobileNo: "1234567890",
+  //   },
+  // ];
 
   const renderItem = ({ item }) => (
     <View style={styles.Tablerow}>
@@ -263,7 +329,7 @@ function UserReport({ navigation }) {
             </View>
 
             {/* Table Body (Row Data) */}
-            {employeeData.map((item, index) => (
+            {employeeData?.map((item, index) => (
               <View key={index} style={styles.Tablerow}>
                 <Text style={styles.cell}>{item.RegistrationCode}</Text>
                 <Text style={styles.cell}>{item.Name}</Text>
@@ -276,6 +342,7 @@ function UserReport({ navigation }) {
                     onPress={() =>
                       navigation.push(SCREENS.EMPLOYEEREGISTRATION, {
                         isNew: false,
+                        employeeData: item,
                       })
                     }
                   />
@@ -284,7 +351,11 @@ function UserReport({ navigation }) {
                   <CustomButton
                     btnText={"View/Update"}
                     style={styles.tableBtn}
-                    onPress={isSearched ? handleReset : handleFilter}
+                    onPress={() =>
+                      navigation.push(SCREENS.EMPLOYEEUPLOADDOC, {
+                        userRegistrationId: item.RegistrationCode,
+                      })
+                    }
                   />
                 </View>
               </View>
@@ -292,6 +363,12 @@ function UserReport({ navigation }) {
           </View>
         </ScrollView>
       </ScrollView>
+      <CustomAlert
+        visible={isShow}
+        message={alertMsg}
+        type={alertType}
+        setVisible={setIsShow}
+      />
     </SafeAreaView>
   );
 }

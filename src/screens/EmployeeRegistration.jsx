@@ -26,10 +26,11 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MyModal from "../components/CenterViewModal";
 import { useRoute } from "@react-navigation/native";
+import CustomAlert from "../components/CustomAlert";
 
 const schema = yup.object().shape({
   DateofJoining: yup.date().required("Date of Joining is required"),
-  Dateofbirth: yup.date().required("Date of Joining is required"),
+  Dateofbirth: yup.date().required("Date of Birth is required"),
   RegistrationCode: yup.string().required("Registraion Code is required"),
   TitleId: yup.number().required("Please Select title"),
   FullName: yup.string().required("Please enter you full name"),
@@ -42,14 +43,15 @@ const schema = yup.object().shape({
     .required("Father or husband name is required"),
   DesignationId: yup.number().required("Please select designation"),
   LocationId: yup.number().required("Please select location"),
-  StaffTypeCode: yup.number().required("Please select type"),
+  StaffTypeCode: yup.string().required("Please select type"),
   DepartmentId: yup.number().required("Please select department"),
   Gender: yup.string().required("Please select gender"),
 });
 
 function EmployeeRegistration() {
   const route = useRoute();
-  const { isNew } = route.params || false;
+  const { isNew, employeeData } = route.params;
+  // console.log(employeeData);
   const {
     control,
     handleSubmit,
@@ -75,6 +77,38 @@ function EmployeeRegistration() {
   const [show, setShow] = useState(false);
   const [showDob, setShowDob] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [isShow, setIsShow] = useState(false);
+  const [alertType, setAlertType] = useState("");
+  const [alertMsg, setAlertMsg] = useState("");
+
+  function dateFormat(date) {
+    const [day, month, year] = date.split("/");
+    dateValue = new Date(`${year}-${month}-${day}`);
+    return dateValue;
+  }
+
+  useEffect(() => {
+    if (employeeData) {
+      setValue("RegistrationCode", employeeData.RegistrationCode || "");
+      setValue("TitleId", parseInt(employeeData.Title) || "");
+      setValue("FullName", employeeData.Name?.trim() || "");
+      setValue("EMail", employeeData.EMail || "");
+      setValue("MobileNo", employeeData.MobileNo || "");
+      setValue("AlternateMob", employeeData.AlternateMob || "");
+      setValue("FatherHusbandName", employeeData.HFName || "");
+      setValue("DesignationId", parseInt(employeeData.DesignationID) || "");
+      setValue("LocationId", parseInt(employeeData.LocationId) || "");
+      setValue("StaffTypeCode", employeeData.StaffTypeCode || "");
+      setValue("DepartmentId", parseInt(employeeData.DepartmentId) || "");
+      setValue("Gender", employeeData.Gender || "");
+      setValue("DateofJoining", new Date(dateFormat(employeeData.DOJ)));
+      setValue("Dateofbirth", new Date(dateFormat(employeeData.DOB)));
+      setValue("Address", employeeData.Address || "");
+      setValue("Pincode", employeeData.Pincode || "");
+      setValue("StateId", employeeData.StateId || "");
+      setValue("CityId", employeeData.CityId || "");
+    }
+  }, [employeeData]);
 
   useEffect(() => {
     const formdata = new FormData();
@@ -154,6 +188,7 @@ function EmployeeRegistration() {
 
   const hanldeOnChange = (event, selectedDate) => {
     const currentDate = selectedDate;
+    // console.log(currentDate);
     setShow(false);
     setValue("DateofJoining", currentDate);
     setDate(currentDate);
@@ -219,24 +254,32 @@ function EmployeeRegistration() {
   };
 
   const onSubmit = (data) => {
-    console.log(data);
+    console.log(data, "submit data");
     data.imgUser = profileImage;
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (value === undefined || value === null) return;
       if (key === "DateofJoining" || key === "Dateofbirth") {
-        formData.append(key, value.toLocaleDateString());
+        console.log(value, "Date");
+        formData.append(key, value.toLocaleDateString("en-GB"));
       } else {
         formData.append(key, value.toString());
       }
     });
     registerService(formData)
       .then((res) => {
-        console.log(res.data);
+        // console.log(res.data);
         if (res.data?.ResponseStatus == 1) {
           setPicPreview(null);
           setProfileImage(null);
           reset();
+          setIsShow(true);
+          setAlertType("info");
+          setAlertMsg(res.data?.ResponseMessage);
+        } else {
+          setIsShow(true);
+          setAlertType("error");
+          setAlertMsg(res.data?.ResponseMessage);
         }
       })
       .catch((error) => {
@@ -245,597 +288,609 @@ function EmployeeRegistration() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={{ marginBottom: 30 }}>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Registration Code</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Registration Code"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="RegistrationCode"
-          />
-          {errors.RegistrationCode && (
-            <Text style={styles.error}>{errors.RegistrationCode.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Title</Text>
-          <View style={styles.pickerContainer}>
+    <>
+      <ScrollView style={styles.container}>
+        <View style={{ marginBottom: 30 }}>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Registration Code</Text>
             <Controller
               control={control}
-              name="TitleId"
-              render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  style={styles.picker}
-                  mode="dropdown"
-                >
-                  <Picker.Item label="Select Title" value={""} />
-                  {title &&
-                    title.map((item) => {
-                      return (
-                        <Picker.Item
-                          label={item?.Type}
-                          value={item?.ID}
-                          key={item?.ID}
-                        />
-                      );
-                    })}
-                </Picker>
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Registration Code"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
               )}
+              name="RegistrationCode"
             />
+            {errors.RegistrationCode && (
+              <Text style={styles.error}>
+                {errors.RegistrationCode.message}
+              </Text>
+            )}
           </View>
-          {errors.TitleId && (
-            <Text style={styles.error}>{errors.TitleId.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Full Name</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Full Name"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="FullName"
-          />
-          {errors.FullName && (
-            <Text style={styles.error}>{errors.FullName.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Gender</Text>
-          <View style={styles.pickerContainer}>
-            <Controller
-              control={control}
-              name="Gender"
-              render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  style={styles.picker}
-                  mode="dropdown"
-                >
-                  <Picker.Item label="Select Gender" value="" />
-                  <Picker.Item label="Male" value="M" />
-                  <Picker.Item label="Female" value="F" />
-                </Picker>
-              )}
-            />
-          </View>
-          {errors.Gender && (
-            <Text style={styles.error}>{errors.Gender.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Mobile No</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Mobile No"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="MobileNo"
-          />
-          {errors.MobileNo && (
-            <Text style={styles.error}>{errors.MobileNo.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Alternate Mobile No</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Alternate Mobile"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="AlternateMob"
-          />
-          {errors.AlternateMob && (
-            <Text style={styles.error}>{errors.AlternateMob.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>E-mail</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter E-mail"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="EMail"
-          />
-          {errors.EMail && (
-            <Text style={styles.error}>{errors.EMail.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Father/Husband Name</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Father/Husband Name"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="FatherHusbandName"
-          />
-          {errors.FatherHusbandName && (
-            <Text style={styles.error}>{errors.FatherHusbandName.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Date of Joining</Text>
-          <Controller
-            control={control}
-            name="DateofJoining"
-            defaultValue={null}
-            render={({ field: { onChange, value } }) => (
-              <>
-                <TouchableOpacity onPress={() => setShow(true)}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Select Date of Joining"
-                    value={date.toLocaleDateString()}
-                    editable={false}
-                    pointerEvents="none"
-                  />
-                </TouchableOpacity>
-
-                {show && (
-                  <DateTimePicker
-                    testID="dateTimePicker"
-                    value={date}
-                    mode={"date"}
-                    is24Hour={true}
-                    onChange={(event, selectedDate) => {
-                      hanldeOnChange(event, selectedDate);
-                    }}
-                  />
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Title</Text>
+            <View style={styles.pickerContainer}>
+              <Controller
+                control={control}
+                name="TitleId"
+                render={({ field: { onChange, value } }) => (
+                  <Picker
+                    selectedValue={employeeData?.Title || value}
+                    onValueChange={onChange}
+                    style={styles.picker}
+                    mode="dropdown"
+                  >
+                    <Picker.Item label="Select Title" value={""} />
+                    {title &&
+                      title.map((item) => {
+                        return (
+                          <Picker.Item
+                            label={item?.Type}
+                            value={item?.ID}
+                            key={item?.ID}
+                          />
+                        );
+                      })}
+                  </Picker>
                 )}
-              </>
+              />
+            </View>
+            {errors.TitleId && (
+              <Text style={styles.error}>{errors.TitleId.message}</Text>
             )}
-          />
-          {errors.DateofJoining && (
-            <Text style={styles.error}>{errors.DateofJoining.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={[styles.inputLabel, { marginBottom: 0 }]}>
-            Date of Birth
-          </Text>
-          <Text style={{ color: "red", fontSize: 12, marginHorizontal: 5 }}>
-            *Should be 18 years old
-          </Text>
-          <Controller
-            control={control}
-            name="Dateofbirth"
-            defaultValue={null}
-            render={({ field: { onChange, value } }) => (
-              <>
-                <TouchableOpacity onPress={() => setShowDob(true)}>
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Select Date of Joining"
-                    value={dob.toLocaleDateString()}
-                    editable={false}
-                    pointerEvents="none"
-                  />
-                </TouchableOpacity>
-
-                {showDob && (
-                  <DateTimePicker
-                    testID="dateTimePicker"
-                    value={dob}
-                    mode={"date"}
-                    is24Hour={true}
-                    onChange={(event, selectedDate) => {
-                      hanldeDobOnChange(event, selectedDate);
-                    }}
-                  />
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Full Name</Text>
+            <Controller
+              control={control}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Full Name"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+              name="FullName"
+            />
+            {errors.FullName && (
+              <Text style={styles.error}>{errors.FullName.message}</Text>
+            )}
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Gender</Text>
+            <View style={styles.pickerContainer}>
+              <Controller
+                control={control}
+                name="Gender"
+                render={({ field: { onChange, value } }) => (
+                  <Picker
+                    selectedValue={value}
+                    onValueChange={onChange}
+                    style={styles.picker}
+                    mode="dropdown"
+                  >
+                    <Picker.Item label="Select Gender" value="" />
+                    <Picker.Item label="Male" value="M" />
+                    <Picker.Item label="Female" value="F" />
+                  </Picker>
                 )}
-              </>
+              />
+            </View>
+            {errors.Gender && (
+              <Text style={styles.error}>{errors.Gender.message}</Text>
             )}
-          />
-          {errors.Dateofbirth && (
-            <Text style={styles.error}>{errors.Dateofbirth.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Designation</Text>
-          <View style={styles.pickerContainer}>
-            <Controller
-              control={control}
-              name="DesignationId"
-              render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  style={styles.picker}
-                  mode="dropdown"
-                >
-                  <Picker.Item label={"Select Designation"} value={""} />
-                  {designations &&
-                    designations.map((item) => {
-                      return (
-                        <Picker.Item
-                          label={item?.Designation}
-                          value={item?.DesignationID}
-                          key={item?.DesignationID}
-                        />
-                      );
-                    })}
-                </Picker>
-              )}
-            />
           </View>
-          {errors.DesignationId && (
-            <Text style={styles.error}>{errors.DesignationId.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Select Location</Text>
-          <View style={styles.pickerContainer}>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Mobile No</Text>
             <Controller
               control={control}
-              name="LocationId"
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Mobile No"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+              name="MobileNo"
+            />
+            {errors.MobileNo && (
+              <Text style={styles.error}>{errors.MobileNo.message}</Text>
+            )}
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Alternate Mobile No</Text>
+            <Controller
+              control={control}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Alternate Mobile"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+              name="AlternateMob"
+            />
+            {errors.AlternateMob && (
+              <Text style={styles.error}>{errors.AlternateMob.message}</Text>
+            )}
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>E-mail</Text>
+            <Controller
+              control={control}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter E-mail"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+              name="EMail"
+            />
+            {errors.EMail && (
+              <Text style={styles.error}>{errors.EMail.message}</Text>
+            )}
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Father/Husband Name</Text>
+            <Controller
+              control={control}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Father/Husband Name"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+              name="FatherHusbandName"
+            />
+            {errors.FatherHusbandName && (
+              <Text style={styles.error}>
+                {errors.FatherHusbandName.message}
+              </Text>
+            )}
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Date of Joining</Text>
+            <Controller
+              control={control}
+              name="DateofJoining"
+              defaultValue={null}
               render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  style={styles.picker}
-                  mode="dropdown" // Dropdown mode for better UI
-                >
-                  <Picker.Item label="Select Location" value="" />
+                <>
+                  <TouchableOpacity onPress={() => setShow(true)}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Select Date of Joining"
+                      value={employeeData?.DOJ || date.toLocaleDateString()}
+                      editable={false}
+                      pointerEvents="none"
+                    />
+                  </TouchableOpacity>
 
-                  {locations &&
-                    locations.map((item) => {
-                      return (
-                        <Picker.Item
-                          label={item?.Location}
-                          value={item?.LocationId}
-                          key={item?.LocationId}
-                        />
-                      );
-                    })}
-                </Picker>
+                  {show && (
+                    <DateTimePicker
+                      testID="dateTimePicker"
+                      value={date}
+                      mode={"date"}
+                      is24Hour={true}
+                      onChange={(event, selectedDate) => {
+                        hanldeOnChange(event, selectedDate);
+                      }}
+                    />
+                  )}
+                </>
               )}
             />
-          </View>
-          {errors.LocationId && (
-            <Text style={styles.error}>{errors.LocationId.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Select Staff</Text>
-          <View style={styles.pickerContainer}>
-            <Controller
-              control={control}
-              name="StaffTypeCode"
-              render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  style={styles.picker}
-                  mode="dropdown" // Dropdown mode for better UI
-                >
-                  <Picker.Item label="Select Staff Type" value="" />
-                  <Picker.Item label="Office" value="OS" />
-                  <Picker.Item label="Field Staff" value="FS" />
-                  {/* <Picker.Item label="Other" value="other" /> */}
-                </Picker>
-              )}
-            />
-          </View>
-          {errors.StaffTypeCode && (
-            <Text style={styles.error}>{errors.StaffTypeCode.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Select Department ID</Text>
-          <View style={styles.pickerContainer}>
-            <Controller
-              control={control}
-              name="DepartmentId"
-              render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  style={styles.picker}
-                  mode="dropdown" // Dropdown mode for better UI
-                >
-                  <Picker.Item label="Select Department" value="" />
-                  {departments &&
-                    departments?.map((item) => {
-                      return (
-                        <Picker.Item
-                          label={item.Department}
-                          value={item.DepartmentId}
-                          key={item.DepartmentId}
-                        />
-                      );
-                    })}
-                </Picker>
-              )}
-            />
-          </View>
-          {errors.DepartmentId && (
-            <Text style={styles.error}>{errors.DepartmentId.message}</Text>
-          )}
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Residential Address</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.textarea}
-                placeholder="Enter Residential Address"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                multiline={true} // Enable multiple lines
-                numberOfLines={4} // Set visible lines
-              />
+            {errors.DateofJoining && (
+              <Text style={styles.error}>{errors.DateofJoining.message}</Text>
             )}
-            name="Address"
-          />
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Permanent Address</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.textarea}
-                placeholder="Permanent Address"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-                multiline={true} // Enable multiple lines
-                numberOfLines={4} // Set visible lines
-              />
-            )}
-            name="PermanentAddress"
-          />
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Pin Code</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Pin Code"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="Pincode"
-          />
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Select State</Text>
-          <View style={styles.pickerContainer}>
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={[styles.inputLabel, { marginBottom: 0 }]}>
+              Date of Birth
+            </Text>
+            <Text style={{ color: "red", fontSize: 12, marginHorizontal: 5 }}>
+              *Should be 18 years old
+            </Text>
             <Controller
               control={control}
-              name="StateId"
+              name="Dateofbirth"
+              defaultValue={null}
               render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  style={styles.picker}
-                  mode="dropdown"
-                >
-                  <Picker.Item label={"Select State"} value={""} />
-                  {states &&
-                    states.map((item) => {
-                      return (
-                        <Picker.Item
-                          label={item?.State}
-                          value={item?.StateId}
-                          key={item?.StateId}
-                        />
-                      );
-                    })}
-                </Picker>
+                <>
+                  <TouchableOpacity onPress={() => setShowDob(true)}>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Select Date of Joining"
+                      value={employeeData?.DOB || dob.toLocaleDateString()}
+                      editable={false}
+                      pointerEvents="none"
+                    />
+                  </TouchableOpacity>
+
+                  {showDob && (
+                    <DateTimePicker
+                      testID="dateTimePicker"
+                      value={dob}
+                      mode={"date"}
+                      is24Hour={true}
+                      onChange={(event, selectedDate) => {
+                        hanldeDobOnChange(event, selectedDate);
+                      }}
+                    />
+                  )}
+                </>
               )}
             />
+            {errors.Dateofbirth && (
+              <Text style={styles.error}>{errors.Dateofbirth.message}</Text>
+            )}
           </View>
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Select City</Text>
-          <View style={styles.pickerContainer}>
-            <Controller
-              control={control}
-              name="CityId"
-              render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  style={styles.picker}
-                  mode="dropdown"
-                >
-                  <Picker.Item label={"Select City"} value={""} />
-                  {cities &&
-                    cities.map((item) => {
-                      return (
-                        <Picker.Item
-                          label={item?.City}
-                          value={item?.CityID}
-                          key={item?.CityID}
-                        />
-                      );
-                    })}
-                </Picker>
-              )}
-            />
-          </View>
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Profile Image</Text>
-          <View style={styles.imagePickerContainer}>
-            <TouchableOpacity onPress={() => setShowModal(true)}>
-              <View
-                style={[
-                  styles.imagePlaceholder,
-                  { height: picPreview ? 200 : 50 },
-                ]}
-              >
-                {picPreview ? (
-                  <Image source={{ uri: picPreview }} style={styles.image} />
-                ) : (
-                  <Text style={{ color: "gray", fontWeight: 500 }}>
-                    Choose Profile Image
-                  </Text>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Designation</Text>
+            <View style={styles.pickerContainer}>
+              <Controller
+                control={control}
+                name="DesignationId"
+                render={({ field: { onChange, value } }) => (
+                  <Picker
+                    selectedValue={employeeData?.DesignationID || value}
+                    onValueChange={onChange}
+                    style={styles.picker}
+                    mode="dropdown"
+                  >
+                    <Picker.Item label={"Select Designation"} value={""} />
+                    {designations &&
+                      designations.map((item) => {
+                        return (
+                          <Picker.Item
+                            label={item?.Designation}
+                            value={item?.DesignationID}
+                            key={item?.DesignationID}
+                          />
+                        );
+                      })}
+                  </Picker>
                 )}
-              </View>
-            </TouchableOpacity>
-          </View>
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Nominee Name</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Nominee Name"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
               />
+            </View>
+            {errors.DesignationId && (
+              <Text style={styles.error}>{errors.DesignationId.message}</Text>
             )}
-            name="NomineeName"
-          />
-        </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Select Nominee Relation</Text>
-          <View style={styles.pickerContainer}>
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Select Location</Text>
+            <View style={styles.pickerContainer}>
+              <Controller
+                control={control}
+                name="LocationId"
+                render={({ field: { onChange, value } }) => (
+                  <Picker
+                    selectedValue={employeeData?.LocationId || value}
+                    onValueChange={onChange}
+                    style={styles.picker}
+                    mode="dropdown" // Dropdown mode for better UI
+                  >
+                    <Picker.Item label="Select Location" value="" />
+
+                    {locations &&
+                      locations.map((item) => {
+                        return (
+                          <Picker.Item
+                            label={item?.Location}
+                            value={item?.LocationId}
+                            key={item?.LocationId}
+                          />
+                        );
+                      })}
+                  </Picker>
+                )}
+              />
+            </View>
+            {errors.LocationId && (
+              <Text style={styles.error}>{errors.LocationId.message}</Text>
+            )}
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Select Staff</Text>
+            <View style={styles.pickerContainer}>
+              <Controller
+                control={control}
+                name="StaffTypeCode"
+                render={({ field: { onChange, value } }) => (
+                  <Picker
+                    selectedValue={employeeData?.StaffTypeCode || value}
+                    onValueChange={onChange}
+                    style={styles.picker}
+                    mode="dropdown" // Dropdown mode for better UI
+                  >
+                    <Picker.Item label="Select Staff Type" value="" />
+                    <Picker.Item label="Office" value="OS" />
+                    <Picker.Item label="Field Staff" value="FS" />
+                    {/* <Picker.Item label="Other" value="other" /> */}
+                  </Picker>
+                )}
+              />
+            </View>
+            {errors.StaffTypeCode && (
+              <Text style={styles.error}>{errors.StaffTypeCode.message}</Text>
+            )}
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Select Department ID</Text>
+            <View style={styles.pickerContainer}>
+              <Controller
+                control={control}
+                name="DepartmentId"
+                render={({ field: { onChange, value } }) => (
+                  <Picker
+                    selectedValue={employeeData?.DepartmentId || value}
+                    onValueChange={onChange}
+                    style={styles.picker}
+                    mode="dropdown" // Dropdown mode for better UI
+                  >
+                    <Picker.Item label="Select Department" value="" />
+                    {departments &&
+                      departments?.map((item) => {
+                        return (
+                          <Picker.Item
+                            label={item.Department}
+                            value={item.DepartmentId}
+                            key={item.DepartmentId}
+                          />
+                        );
+                      })}
+                  </Picker>
+                )}
+              />
+            </View>
+            {errors.DepartmentId && (
+              <Text style={styles.error}>{errors.DepartmentId.message}</Text>
+            )}
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Residential Address</Text>
             <Controller
               control={control}
-              name="NomineeRelation"
-              render={({ field: { onChange, value } }) => (
-                <Picker
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  style={styles.picker}
-                  mode="dropdown" // Dropdown mode for better UI
-                >
-                  <Picker.Item label="Select Relation" value="" />
-                  {relations &&
-                    relations.map((item) => {
-                      return (
-                        <Picker.Item
-                          label={item?.NomnieeType}
-                          value={item?.NomnieeTypeId}
-                          key={item?.NomnieeTypeId}
-                        />
-                      );
-                    })}
-                </Picker>
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.textarea}
+                  placeholder="Enter Residential Address"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  multiline={true} // Enable multiple lines
+                  numberOfLines={4} // Set visible lines
+                />
               )}
+              name="Address"
+            />
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Permanent Address</Text>
+            <Controller
+              control={control}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.textarea}
+                  placeholder="Permanent Address"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                  multiline={true} // Enable multiple lines
+                  numberOfLines={4} // Set visible lines
+                />
+              )}
+              name="PermanentAddress"
+            />
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Pin Code</Text>
+            <Controller
+              control={control}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Pin Code"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+              name="Pincode"
+            />
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Select State</Text>
+            <View style={styles.pickerContainer}>
+              <Controller
+                control={control}
+                name="StateId"
+                render={({ field: { onChange, value } }) => (
+                  <Picker
+                    selectedValue={value}
+                    onValueChange={onChange}
+                    style={styles.picker}
+                    mode="dropdown"
+                  >
+                    <Picker.Item label={"Select State"} value={""} />
+                    {states &&
+                      states.map((item) => {
+                        return (
+                          <Picker.Item
+                            label={item?.State}
+                            value={item?.StateId}
+                            key={item?.StateId}
+                          />
+                        );
+                      })}
+                  </Picker>
+                )}
+              />
+            </View>
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Select City</Text>
+            <View style={styles.pickerContainer}>
+              <Controller
+                control={control}
+                name="CityId"
+                render={({ field: { onChange, value } }) => (
+                  <Picker
+                    selectedValue={value}
+                    onValueChange={onChange}
+                    style={styles.picker}
+                    mode="dropdown"
+                  >
+                    <Picker.Item label={"Select City"} value={""} />
+                    {cities &&
+                      cities.map((item) => {
+                        return (
+                          <Picker.Item
+                            label={item?.City}
+                            value={item?.CityID}
+                            key={item?.CityID}
+                          />
+                        );
+                      })}
+                  </Picker>
+                )}
+              />
+            </View>
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Profile Image</Text>
+            <View style={styles.imagePickerContainer}>
+              <TouchableOpacity onPress={() => setShowModal(true)}>
+                <View
+                  style={[
+                    styles.imagePlaceholder,
+                    { height: picPreview ? 200 : 50 },
+                  ]}
+                >
+                  {picPreview ? (
+                    <Image source={{ uri: picPreview }} style={styles.image} />
+                  ) : (
+                    <Text style={{ color: "gray", fontWeight: 500 }}>
+                      Choose Profile Image
+                    </Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Nominee Name</Text>
+            <Controller
+              control={control}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Nominee Name"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+              name="NomineeName"
+            />
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Select Nominee Relation</Text>
+            <View style={styles.pickerContainer}>
+              <Controller
+                control={control}
+                name="NomineeRelation"
+                render={({ field: { onChange, value } }) => (
+                  <Picker
+                    selectedValue={value}
+                    onValueChange={onChange}
+                    style={styles.picker}
+                    mode="dropdown" // Dropdown mode for better UI
+                  >
+                    <Picker.Item label="Select Relation" value="" />
+                    {relations &&
+                      relations.map((item) => {
+                        return (
+                          <Picker.Item
+                            label={item?.NomnieeType}
+                            value={item?.NomnieeTypeId}
+                            key={item?.NomnieeTypeId}
+                          />
+                        );
+                      })}
+                  </Picker>
+                )}
+              />
+            </View>
+          </View>
+          <View style={styles.inputControl}>
+            <Text style={styles.inputLabel}>Nominee Aadhar No</Text>
+            <Controller
+              control={control}
+              render={({ field: { onChange, onBlur, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Nominee Aadhar No"
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  value={value}
+                />
+              )}
+              name="NomineeAdharNo"
+            />
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: 20,
+              paddingHorizontal: 20,
+            }}
+          >
+            <CustomButton
+              btnText={"Reset"}
+              style={[styles.btn, { backgroundColor: "red" }]}
+              onPress={() => reset()}
+            />
+            <CustomButton
+              btnText={"Submit"}
+              style={[styles.btn, { backgroundColor: "green" }]}
+              onPress={handleSubmit(onSubmit)}
             />
           </View>
         </View>
-        <View style={styles.inputControl}>
-          <Text style={styles.inputLabel}>Nominee Aadhar No</Text>
-          <Controller
-            control={control}
-            render={({ field: { onChange, onBlur, value } }) => (
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Nominee Aadhar No"
-                onBlur={onBlur}
-                onChangeText={onChange}
-                value={value}
-              />
-            )}
-            name="NomineeAdharNo"
-          />
-        </View>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            alignItems: "center",
-            gap: 20,
-            paddingHorizontal: 20,
-          }}
-        >
-          <CustomButton
-            btnText={"Reset"}
-            style={[styles.btn, { backgroundColor: "red" }]}
-            onPress={() => reset()}
-          />
-          <CustomButton
-            btnText={"Submit"}
-            style={[styles.btn, { backgroundColor: "green" }]}
-            onPress={handleSubmit(onSubmit)}
-          />
-        </View>
-      </View>
-      <MyModal
-        modalVisible={showModal}
-        setModalVisible={setShowModal}
-        action1={launchCamera}
-        action2={pickImage}
+        <MyModal
+          modalVisible={showModal}
+          setModalVisible={setShowModal}
+          action1={launchCamera}
+          action2={pickImage}
+        />
+      </ScrollView>
+      <CustomAlert
+        visible={isShow}
+        message={alertMsg}
+        type={alertType}
+        setVisible={setIsShow}
       />
-    </ScrollView>
+    </>
   );
 }
 

@@ -97,7 +97,11 @@ function Dashboard({ navigation }) {
         <ActionButton
           title="Employee Upload Doc"
           ImageName="upload"
-          onPress={() => navigation.push(SCREENS.EMPLOYEEUPLOADDOC)}
+          onPress={() =>
+            navigation.push(SCREENS.EMPLOYEEUPLOADDOC, {
+              userRegistrationId: "",
+            })
+          }
         />
 
         <ActionButton
