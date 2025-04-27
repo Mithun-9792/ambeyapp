@@ -9,5 +9,6 @@ export const SCREENS = {
   EMPLOYEEUPLOADDOC: "EmployeeUploadDoc",
   EMPLOYEEREGISTRATION: "EmployeeRegistrarion",
   USERREPORT: "UserReport",
+  VEHICLELOG: "VehicleLog",
   // Add more screens here
 };

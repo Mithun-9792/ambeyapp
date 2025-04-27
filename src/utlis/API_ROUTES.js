@@ -14,6 +14,9 @@ const API_ROUTES = {
   GET_DOC_TYPE_API: `${BASS_URL}/APIServices/GetDocumentType.aspx`,
   GET_EMP_DOC_API: `${BASS_URL}/APIServices/GetEmployeeDocument.aspx`,
   UPLOAD_EMP_DOC_API: `${BASS_URL}/APIServices/UploadEmployeeDocument.aspx`,
+  GET_CLIENT_DETAILS_API: `${BASS_URL}/APIServices/GetClientDetail.aspx`,
+  GET_MONTHS_API: `${BASS_URL}/APIServices/GetMonths.aspx`,
+  GET_YEAR_API: `${BASS_URL}/APIServices/GetYears.aspx`,
 };
 
 export default API_ROUTES;

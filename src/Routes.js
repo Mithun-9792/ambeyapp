@@ -8,6 +8,7 @@ import EmployeeUploadDoc from "./screens/EmployeeUploadDoc";
 import EmployeeRegistration from "./screens/EmployeeRegistration";
 import EmployeeRegister from "./screens/EmployeeRegister";
 import UserReport from "./screens/UserReport";
+import VehicleLog from "./screens/VehicleLog";
 
 const Stack = createNativeStackNavigator();
 
@@ -48,6 +49,11 @@ export default function Routes() {
         name={SCREENS.USERREPORT}
         options={{ headerShown: true, title: "User Report" }}
         component={UserReport}
+      />
+      <Stack.Screen
+        name={SCREENS.VEHICLELOG}
+        options={{ headerShown: true, title: "Vehicle Log" }}
+        component={VehicleLog}
       />
     </Stack.Navigator>
   );

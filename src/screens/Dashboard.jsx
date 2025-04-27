@@ -112,7 +112,7 @@ function Dashboard({ navigation }) {
         <ActionButton
           title="User Report"
           ImageName="file-text"
-          onPress={() => navigation.push(SCREENS.USERREPORT)}
+          onPress={() => navigation.push(SCREENS.VEHICLELOG)}
         />
       </View>
     </SafeAreaView>
