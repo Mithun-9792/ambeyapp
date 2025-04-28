@@ -17,6 +17,7 @@ const API_ROUTES = {
   GET_CLIENT_DETAILS_API: `${BASS_URL}/APIServices/GetClientDetail.aspx`,
   GET_MONTHS_API: `${BASS_URL}/APIServices/GetMonths.aspx`,
   GET_YEAR_API: `${BASS_URL}/APIServices/GetYears.aspx`,
+  GET_VEHICLE_NUMBER_API: `${BASS_URL}/APIServices/GetVehicleNumbers.aspx`,
 };
 
 export default API_ROUTES;

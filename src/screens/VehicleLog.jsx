@@ -1,11 +1,20 @@
 import { Picker } from "@react-native-picker/picker";
-import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  FlatList,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native";
 import CustomButton from "../components/CustomButton";
 import {
   getClientListService,
   getMonthsListService,
+  getVehicleNumberListService,
   getYearsListService,
 } from "../services/dashboard.services";
 
@@ -15,6 +24,8 @@ function VehicleLog() {
   const [years, setYears] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const [vehicleNumber, setVehicleNumber] = useState("");
+  const [vehicleNumberList, setVehicleNumberList] = useState([]);
   const [dates, setDates] = useState([]);
 
   const [tableData, setTableData] = useState(
@@ -75,7 +86,19 @@ function VehicleLog() {
     }
 
     // Auto-calculate Avg Km per Ltr if Diesel Volume > 0
-    if (field === "totalKm" || field === "dieselVolume") {
+    if (field === "dieselAmount" || field === "dieselRate") {
+      const dieselAmount = parseFloat(updatedDates[index].dieselAmount) || 0;
+      const dieselRate = parseFloat(updatedDates[index].dieselRate) || 0;
+      updatedDates[index].dieselVolume =
+        dieselRate > 0 ? (dieselAmount / dieselRate).toFixed(2) : "";
+    }
+
+    if (
+      field === "totalKm" ||
+      field === "dieselVolume" ||
+      field === "dieselAmount" ||
+      field === "dieselRate"
+    ) {
       const totalKm = parseFloat(updatedDates[index].totalKm) || 0;
       const dieselVolume = parseFloat(updatedDates[index].dieselVolume) || 0;
       updatedDates[index].avgKmPerLtr =
@@ -86,6 +109,11 @@ function VehicleLog() {
   };
 
   const generateDates = () => {
+    if (!vehicleNumber) {
+      alert("Please enter the vehicle number");
+      return;
+    }
+
     if (!selectedMonth || !selectedYear) {
       alert("Please select both month and year");
       return;
@@ -120,18 +148,120 @@ function VehicleLog() {
     setDates(dateList);
   };
 
+  const calculateTotals = () => {
+    const totalKm = dates.reduce(
+      (sum, item) => sum + (parseFloat(item.totalKm) || 0),
+      0
+    );
+    const totalDieselAmount = dates.reduce(
+      (sum, item) => sum + (parseFloat(item.dieselAmount) || 0),
+      0
+    );
+    const totalDieselVolume = dates.reduce(
+      (sum, item) => sum + (parseFloat(item.dieselVolume) || 0),
+      0
+    );
+    const avgKmPerLtr =
+      totalDieselVolume > 0 ? (totalKm / totalDieselVolume).toFixed(2) : 0;
+
+    return { totalKm, totalDieselAmount, totalDieselVolume, avgKmPerLtr };
+  };
+
+  const handleSubmit = () => {
+    const totals = calculateTotals();
+    console.log("Submitted Data:", dates);
+    console.log("Totals:", totals);
+    alert("Data submitted successfully!");
+  };
+
+  const totals = calculateTotals();
+
+  const debounce = (func, delay) => {
+    let timeoutId;
+    return (...args) => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        func(...args);
+      }, delay);
+    };
+  };
+
+  function handleGetVehicleNumberList(text) {
+    const formData = new FormData();
+    formData.append("VechileNo", text);
+    formData.append("UserToken", "sdfsdf3355");
+    formData.append("IP", "-1");
+    formData.append("MAC", "ertetet");
+    formData.append("GeoLocation", "20.25133,20.231464");
+    formData.append("UserId", "25");
+
+    getVehicleNumberListService(formData)
+      .then((res) => {
+        // console.log(res.data);
+        setVehicleNumberList(res.data.result);
+      })
+      .catch((err) => console.log("Client List Error", err));
+  }
+
+  const debouncedGetVehicleNumberList = useCallback(
+    debounce(handleGetVehicleNumberList, 500),
+    []
+  );
+
+  const handleTextChange = (text) => {
+    setVehicleNumber(text); // Update input immediately
+    debouncedGetVehicleNumberList(text); // Debounce filtering
+  };
+
+  const handleSelect = (vehicle) => {
+    setVehicleNumber(vehicle);
+    setVehicleNumberList([]);
+  };
   return (
     <SafeAreaView>
       <ScrollView>
         <View style={{ margin: 30 }}>
-          {/* Form Area */}
-          <View
-            style={[styles.inputControl, { flexDirection: "row", gap: 10 }]}
-          >
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Enter Vehicle No"
-            />
+          <View style={[styles.inputControl, { flexDirection: "row", gap: 5 }]}>
+            <View style={{ flex: 1 }}>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter Vehicle No"
+                value={vehicleNumber}
+                onChangeText={handleTextChange}
+              />
+              {vehicleNumberList.length > 0 && (
+                <View
+                  style={{
+                    position: "absolute", // Keep absolute if you want it to overlay
+                    top: styles.input.height || 40, // Position below the TextInput (adjust height if needed)
+                    left: 0,
+                    right: 0,
+                    backgroundColor: "#fff",
+                    borderWidth: 1,
+                    borderColor: "#ccc",
+                    borderRadius: 5,
+                    maxHeight: 200,
+                    zIndex: 20,
+                  }}
+                >
+                  <FlatList
+                    data={vehicleNumberList}
+                    keyExtractor={(item) => item?.id?.toString()}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        onPress={() => handleSelect(item?.VechileNo)}
+                        style={styles.dropdownItem}
+                      >
+                        <Text>{item?.VechileNo}</Text>
+                      </TouchableOpacity>
+                    )}
+                    keyboardShouldPersistTaps="handled"
+                    nestedScrollEnabled={true}
+                    pointerEvents="auto"
+                  />
+                </View>
+              )}
+            </View>
             <View style={[styles.pickerContainer]}>
               <Picker style={styles.picker} mode="dropdown">
                 <Picker.Item label="Select Client" value="" />
@@ -146,9 +276,7 @@ function VehicleLog() {
             </View>
           </View>
 
-          <View
-            style={[styles.inputControl, { flexDirection: "row", gap: 10 }]}
-          >
+          <View style={[styles.inputControl, { flexDirection: "row", gap: 5 }]}>
             <View style={[styles.pickerContainer, { flex: 1 }]}>
               <Picker
                 selectedValue={selectedMonth}
@@ -199,22 +327,36 @@ function VehicleLog() {
             {/* Table Area */}
             <View style={{ marginTop: 30 }}>
               {/* Table Header */}
-              <View
-                style={{ flexDirection: "row", backgroundColor: "#e1ebff" }}
-              >
-                <Text style={[styles.cell, styles.headerCell]}>S.No</Text>
-                <Text style={[styles.cell, styles.headerCell]}>Date</Text>
-                <Text style={[styles.cell, styles.headerCell]}>Opening Km</Text>
-                <Text style={[styles.cell, styles.headerCell]}>Closing Km</Text>
-                <Text style={[styles.cell, styles.headerCell]}>Total Km</Text>
-                <Text style={[styles.cell, styles.headerCell]}>Diesel Amt</Text>
-                <Text style={[styles.cell, styles.headerCell]}>
-                  Diesel Rate
-                </Text>
-                <Text style={[styles.cell, styles.headerCell]}>Diesel Vol</Text>
-                <Text style={[styles.cell, styles.headerCell]}>Avg Km/Ltr</Text>
-                <Text style={[styles.cell, styles.headerCell]}>Narration</Text>
-              </View>
+              {dates.length ? (
+                <View
+                  style={{ flexDirection: "row", backgroundColor: "#e1ebff" }}
+                >
+                  <Text style={[styles.cell, styles.headerCell]}>S.No</Text>
+                  <Text style={[styles.cell, styles.headerCell]}>Date</Text>
+                  <Text style={[styles.cell, styles.headerCell]}>
+                    Opening Km
+                  </Text>
+                  <Text style={[styles.cell, styles.headerCell]}>
+                    Closing Km
+                  </Text>
+                  <Text style={[styles.cell, styles.headerCell]}>Total Km</Text>
+                  <Text style={[styles.cell, styles.headerCell]}>
+                    Diesel Amt
+                  </Text>
+                  <Text style={[styles.cell, styles.headerCell]}>
+                    Diesel Rate
+                  </Text>
+                  <Text style={[styles.cell, styles.headerCell]}>
+                    Diesel Vol
+                  </Text>
+                  <Text style={[styles.cell, styles.headerCell]}>
+                    Avg Km/Ltr
+                  </Text>
+                  <Text style={[styles.cell, styles.headerCell]}>
+                    Narration
+                  </Text>
+                </View>
+              ) : null}
 
               {/* Table Body */}
               {dates.map((item, index) => (
@@ -276,8 +418,47 @@ function VehicleLog() {
                   />
                 </View>
               ))}
+
+              {/* Totals Row */}
+              {dates.length ? (
+                <View
+                  style={{ flexDirection: "row", backgroundColor: "#f0f0f0" }}
+                >
+                  <Text style={styles.cell}>-</Text>
+                  <Text style={styles.cell}>Totals</Text>
+                  <Text style={styles.cell}></Text>
+                  <Text style={styles.cell}></Text>
+                  <Text style={[styles.cell, { fontWeight: "bold" }]}>
+                    {totals.totalKm}
+                  </Text>
+                  <Text style={[styles.cell, { fontWeight: "bold" }]}>
+                    {totals.totalDieselAmount}
+                  </Text>
+                  <Text style={styles.cell}></Text>
+                  <Text style={[styles.cell, { fontWeight: "bold" }]}>
+                    {totals.totalDieselVolume}
+                  </Text>
+                  <Text style={[styles.cell, { fontWeight: "bold" }]}>
+                    {totals.avgKmPerLtr}
+                  </Text>
+                  <Text style={styles.cell}></Text>
+                </View>
+              ) : null}
             </View>
           </ScrollView>
+
+          {dates.length ? (
+            <CustomButton
+              btnText={"Submit"}
+              onPress={handleSubmit}
+              style={{
+                backgroundColor: "green",
+                padding: 10,
+                borderRadius: 10,
+                marginTop: 20,
+              }}
+            />
+          ) : null}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -298,6 +479,19 @@ const styles = StyleSheet.create({
     color: "#222",
     borderWidth: 1,
     borderColor: "#C9D3DB",
+  },
+  dropdown: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginTop: 4,
+    borderRadius: 5,
+    maxHeight: 150,
+    backgroundColor: "#f1f1f1",
+  },
+  dropdownItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
   },
   pickerContainer: {
     height: 50,

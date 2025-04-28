@@ -1,10 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Image, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import PagerView from "react-native-pager-view";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SCREENS } from "../constants/route";
 import ActionButton from "../components/ActionButton"; // Import your new component
-
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 function Dashboard({ navigation }) {
   const [time, setTime] = useState("");
   const [userName, setUserName] = useState("");
@@ -45,13 +52,24 @@ function Dashboard({ navigation }) {
     fetchUserData();
   }, []);
 
+  function handleLogout() {
+    // Clear AsyncStorage and navigate to login screen
+    AsyncStorage.clear()
+      .then(() => {
+        navigation.replace(SCREENS.LOGIN);
+      })
+      .catch((error) => {
+        console.error("Failed to clear AsyncStorage", error);
+      });
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header with logo, username and time */}
       <View style={styles.header}>
         <Image source={require("../assets/logo.png")} style={styles.image} />
         <Text style={{ fontSize: 18, fontWeight: "600" }}>{userName}</Text>
-        <Text
+        {/* <Text
           style={{
             fontSize: 18,
             fontWeight: "600",
@@ -60,7 +78,15 @@ function Dashboard({ navigation }) {
           }}
         >
           {time}
-        </Text>
+        </Text> */}
+        <TouchableOpacity onPress={() => handleLogout()}>
+          <FontAwesome
+            name="power-off"
+            size={24}
+            color="black"
+            style={{ color: "red" }}
+          />
+        </TouchableOpacity>
       </View>
 
       {/* Image slider */}

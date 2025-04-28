@@ -24,3 +24,11 @@ export const getYearsListService = async (data) => {
     },
   });
 };
+
+export const getVehicleNumberListService = async (data) => {
+  return await axios.post(API_ROUTES.GET_VEHICLE_NUMBER_API, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
