@@ -16,8 +16,6 @@ function Dashboard({ navigation }) {
   const [time, setTime] = useState("");
   const [userName, setUserName] = useState("");
 
-  // Emp009792;
-  // Update time every second with seconds included
   useEffect(() => {
     const updateTime = () => {
       setTime(
@@ -136,7 +134,7 @@ function Dashboard({ navigation }) {
           onPress={() => navigation.push(SCREENS.USERREPORT)}
         />
         <ActionButton
-          title="User Report"
+          title="Vehicle Log"
           ImageName="file-text"
           onPress={() => navigation.push(SCREENS.VEHICLELOG)}
         />

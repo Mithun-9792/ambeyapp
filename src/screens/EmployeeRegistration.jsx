@@ -27,11 +27,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import MyModal from "../components/CenterViewModal";
 import { useRoute } from "@react-navigation/native";
 import CustomAlert from "../components/CustomAlert";
+import Checkbox from "expo-checkbox";
 
 const schema = yup.object().shape({
   DateofJoining: yup.date().required("Date of Joining is required"),
   Dateofbirth: yup.date().required("Date of Birth is required"),
-  RegistrationCode: yup.string().required("Registraion Code is required"),
+  RegistrationCode: yup.string(),
   TitleId: yup.number().required("Please Select title"),
   FullName: yup.string().required("Please enter you full name"),
   EMail: yup.string().email("Please enter a valid email address"),
@@ -46,23 +47,31 @@ const schema = yup.object().shape({
   StaffTypeCode: yup.string().required("Please select type"),
   DepartmentId: yup.number().required("Please select department"),
   Gender: yup.string().required("Please select gender"),
+  Address: yup.string(),
+  PermanentAddress: yup.string(),
 });
 
 function EmployeeRegistration() {
   const route = useRoute();
   const { isNew, employeeData } = route.params;
-  // console.log(employeeData);
+  const eighteenYearsAgo = new Date();
+  eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
   const {
     control,
     handleSubmit,
     reset,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm({
     resolver: yupResolver(schema),
+    defaultValues: {
+      DateofJoining: new Date(),
+      Dateofbirth: eighteenYearsAgo,
+      RegistrationCode: "Emp000000",
+    },
   });
-  const eighteenYearsAgo = new Date();
-  eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
+
   const [designations, setDesignations] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [states, setStates] = useState([]);
@@ -80,6 +89,7 @@ function EmployeeRegistration() {
   const [isShow, setIsShow] = useState(false);
   const [alertType, setAlertType] = useState("");
   const [alertMsg, setAlertMsg] = useState("");
+  const [isSameAddress, setIsSameAddress] = useState(false);
 
   function dateFormat(date) {
     const [day, month, year] = date.split("/");
@@ -268,7 +278,7 @@ function EmployeeRegistration() {
     });
     registerService(formData)
       .then((res) => {
-        // console.log(res.data);
+        console.log(res.data);
         if (res.data?.ResponseStatus == 1) {
           setPicPreview(null);
           setProfileImage(null);
@@ -284,6 +294,9 @@ function EmployeeRegistration() {
       })
       .catch((error) => {
         console.error("Error:", error);
+        setIsShow(true);
+        setAlertType("error");
+        setAlertMsg(error?.response?.data?.message);
       });
   };
 
@@ -292,16 +305,17 @@ function EmployeeRegistration() {
       <ScrollView style={styles.container}>
         <View style={{ marginBottom: 30 }}>
           <View style={styles.inputControl}>
-            <Text style={styles.inputLabel}>Registration Code</Text>
+            <Text style={styles.inputLabel}>Application Number</Text>
             <Controller
               control={control}
               render={({ field: { onChange, onBlur, value } }) => (
                 <TextInput
                   style={styles.input}
-                  placeholder="Enter Registration Code"
+                  placeholder="Application Number"
                   onBlur={onBlur}
                   onChangeText={onChange}
                   value={value}
+                  readOnly
                 />
               )}
               name="RegistrationCode"
@@ -466,7 +480,7 @@ function EmployeeRegistration() {
             )}
           </View>
           <View style={styles.inputControl}>
-            <Text style={styles.inputLabel}>Date of Joining</Text>
+            <Text style={styles.inputLabel}>Application Date</Text>
             <Controller
               control={control}
               name="DateofJoining"
@@ -483,7 +497,7 @@ function EmployeeRegistration() {
                     />
                   </TouchableOpacity>
 
-                  {show && (
+                  {/* {show && (
                     <DateTimePicker
                       testID="dateTimePicker"
                       value={date}
@@ -493,7 +507,7 @@ function EmployeeRegistration() {
                         hanldeOnChange(event, selectedDate);
                       }}
                     />
-                  )}
+                  )} */}
                 </>
               )}
             />
@@ -673,7 +687,12 @@ function EmployeeRegistration() {
                   style={styles.textarea}
                   placeholder="Enter Residential Address"
                   onBlur={onBlur}
-                  onChangeText={onChange}
+                  onChangeText={(text) => {
+                    onChange(text);
+                    if (isSameAddress) {
+                      setValue("PermanentAddress", text); // Automatically copy to PermanentAddress
+                    }
+                  }}
                   value={value}
                   multiline={true} // Enable multiple lines
                   numberOfLines={4} // Set visible lines
@@ -681,6 +700,28 @@ function EmployeeRegistration() {
               )}
               name="Address"
             />
+          </View>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginVertical: 8,
+            }}
+          >
+            <Checkbox
+              value={isSameAddress}
+              onValueChange={(newValue) => {
+                setIsSameAddress(newValue);
+                if (newValue) {
+                  setValue("PermanentAddress", getValues("Address")); // Copy Residential address
+                } else {
+                  setValue("PermanentAddress", ""); // Clear if unchecked
+                }
+              }}
+              // style={{ backgroundColor: "orange" }}
+              color="orange"
+            />
+            <Text style={{ marginLeft: 8 }}>Same as Residential Address</Text>
           </View>
           <View style={styles.inputControl}>
             <Text style={styles.inputLabel}>Permanent Address</Text>
@@ -695,6 +736,7 @@ function EmployeeRegistration() {
                   value={value}
                   multiline={true} // Enable multiple lines
                   numberOfLines={4} // Set visible lines
+                  editable={!isSameAddress}
                 />
               )}
               name="PermanentAddress"

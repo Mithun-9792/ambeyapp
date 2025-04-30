@@ -32,3 +32,11 @@ export const getVehicleNumberListService = async (data) => {
     },
   });
 };
+
+export const addMonthlyLogService = async (data) => {
+  return await axios.post(API_ROUTES.ADD_MONTHLY_LOG_API, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};

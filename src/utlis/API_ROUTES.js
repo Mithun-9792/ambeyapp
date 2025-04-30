@@ -18,6 +18,7 @@ const API_ROUTES = {
   GET_MONTHS_API: `${BASS_URL}/APIServices/GetMonths.aspx`,
   GET_YEAR_API: `${BASS_URL}/APIServices/GetYears.aspx`,
   GET_VEHICLE_NUMBER_API: `${BASS_URL}/APIServices/GetVehicleNumbers.aspx`,
+  ADD_MONTHLY_LOG_API: `${BASS_URL}/APIServices/SaveVehicleRunningMonthlyLog.aspx`,
 };
 
 export default API_ROUTES;

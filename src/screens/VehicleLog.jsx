@@ -17,6 +17,7 @@ import {
   getVehicleNumberListService,
   getYearsListService,
 } from "../services/dashboard.services";
+import { set } from "react-hook-form";
 
 function VehicleLog() {
   const [clients, setClients] = useState([]);
@@ -24,7 +25,9 @@ function VehicleLog() {
   const [years, setYears] = useState([]);
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+  const [yearNumber, setYearNumber] = useState(0);
   const [vehicleNumber, setVehicleNumber] = useState("");
+  const [vehicleNumberId, setVehicleNumberId] = useState("");
   const [vehicleNumberList, setVehicleNumberList] = useState([]);
   const [dates, setDates] = useState([]);
 
@@ -170,8 +173,27 @@ function VehicleLog() {
   const handleSubmit = () => {
     const totals = calculateTotals();
     console.log("Submitted Data:", dates);
-    console.log("Totals:", totals);
+    console.log("Totals:", totals, vehicleNumberId, vehicleNumber);
     alert("Data submitted successfully!");
+    const formData = new FormData();
+
+    formData.append("LogListData", JSON.stringify(dates));
+    formData.append("VenderVehicleId", vehicleNumberId || 21);
+    formData.append("MonthNmber", parseInt(selectedMonth) || 1);
+    formData.append("YearNumber", parseInt(yearNumber) || "");
+    formData.append("VechileRegisNo", vehicleNumber ||"");
+    formData.append("OpeningKM", "");
+    formData.append("ClosingKM", "");
+    formData.append("DieselAmount", "");
+    formData.append("DieselRate", "");
+    formData.append("Narration", "");
+    formData.append("TotalKM", "");
+    formData.append("LogDate", "");
+    formData.append("UserToken", "");
+    formData.append("IP", "");
+    formData.append("MAC", "");
+    formData.append("UserId", "");
+    formData.append("GeoLocation", "");
   };
 
   const totals = calculateTotals();
@@ -249,7 +271,10 @@ function VehicleLog() {
                     keyExtractor={(item) => item?.id?.toString()}
                     renderItem={({ item }) => (
                       <TouchableOpacity
-                        onPress={() => handleSelect(item?.VechileNo)}
+                        onPress={() => {
+                          setVehicleNumberId(item?.id);
+                          handleSelect(item?.VechileNo);
+                        }}
                         style={styles.dropdownItem}
                       >
                         <Text>{item?.VechileNo}</Text>
@@ -262,7 +287,7 @@ function VehicleLog() {
                 </View>
               )}
             </View>
-            <View style={[styles.pickerContainer]}>
+            {/* <View style={[styles.pickerContainer]}>
               <Picker style={styles.picker} mode="dropdown">
                 <Picker.Item label="Select Client" value="" />
                 {clients?.map((item) => (
@@ -273,14 +298,16 @@ function VehicleLog() {
                   />
                 ))}
               </Picker>
-            </View>
+            </View> */}
           </View>
 
           <View style={[styles.inputControl, { flexDirection: "row", gap: 5 }]}>
             <View style={[styles.pickerContainer, { flex: 1 }]}>
               <Picker
                 selectedValue={selectedMonth}
-                onValueChange={(value) => setSelectedMonth(value)}
+                onValueChange={(value) => {
+                  setSelectedMonth(value);
+                }}
                 style={styles.picker}
                 mode="dropdown"
               >
@@ -297,7 +324,10 @@ function VehicleLog() {
             <View style={[styles.pickerContainer, { flex: 1 }]}>
               <Picker
                 selectedValue={selectedYear}
-                onValueChange={(value) => setSelectedYear(value)}
+                onValueChange={(value) => {
+                  setSelectedYear(value.Year);
+                  setYearNumber(value.YearId);
+                }}
                 style={styles.picker}
                 mode="dropdown"
               >
@@ -305,7 +335,7 @@ function VehicleLog() {
                 {years?.map((item) => (
                   <Picker.Item
                     label={item.Year}
-                    value={item.Year}
+                    value={item}
                     key={item.YearId}
                   />
                 ))}
