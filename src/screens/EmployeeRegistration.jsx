@@ -68,7 +68,8 @@ function EmployeeRegistration() {
     defaultValues: {
       DateofJoining: new Date(),
       Dateofbirth: eighteenYearsAgo,
-      RegistrationCode: "Emp000000",
+      RegistrationCode: "",
+      AlternateMob: 0,
     },
   });
 
@@ -304,7 +305,7 @@ function EmployeeRegistration() {
     <>
       <ScrollView style={styles.container}>
         <View style={{ marginBottom: 30 }}>
-          <View style={styles.inputControl}>
+          {/* <View style={styles.inputControl}>
             <Text style={styles.inputLabel}>Application Number</Text>
             <Controller
               control={control}
@@ -325,7 +326,7 @@ function EmployeeRegistration() {
                 {errors.RegistrationCode.message}
               </Text>
             )}
-          </View>
+          </View> */}
           <View style={styles.inputControl}>
             <Text style={styles.inputLabel}>Title</Text>
             <View style={styles.pickerContainer}>

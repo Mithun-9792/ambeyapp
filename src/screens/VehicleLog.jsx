@@ -12,12 +12,14 @@ import {
 import { SafeAreaView } from "react-native";
 import CustomButton from "../components/CustomButton";
 import {
+  addMonthlyLogService,
   getClientListService,
   getMonthsListService,
   getVehicleNumberListService,
   getYearsListService,
 } from "../services/dashboard.services";
 import { set } from "react-hook-form";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 function VehicleLog() {
   const [clients, setClients] = useState([]);
@@ -30,7 +32,8 @@ function VehicleLog() {
   const [vehicleNumberId, setVehicleNumberId] = useState("");
   const [vehicleNumberList, setVehicleNumberList] = useState([]);
   const [dates, setDates] = useState([]);
-
+  const [lastEditedRowIndex, setLastEditedRowIndex] = useState(null);
+  const [userData, setUserData] = useState({});
   const [tableData, setTableData] = useState(
     Array(10).fill({
       date: "",
@@ -45,7 +48,21 @@ function VehicleLog() {
     })
   );
 
+  const getUserData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("userData");
+      if (jsonValue != null) {
+        const userData = JSON.parse(jsonValue);
+        setUserData(userData);
+        return userData;
+      }
+    } catch (error) {
+      console.error("Error retrieving user data", error);
+    }
+  };
+
   useEffect(() => {
+    getUserData();
     const formData = new FormData();
     formData.append("BankID", "-1");
     formData.append("BranchId", "-1");
@@ -79,6 +96,9 @@ function VehicleLog() {
   const handleInputChange = (index, field, value) => {
     const updatedDates = [...dates];
     updatedDates[index][field] = value;
+
+    // Track the last edited row index
+    setLastEditedRowIndex(index);
 
     // Auto-calculate Total Km if Opening and Closing are filled
     if (field === "openingKm" || field === "closingKm") {
@@ -172,28 +192,45 @@ function VehicleLog() {
 
   const handleSubmit = () => {
     const totals = calculateTotals();
-    console.log("Submitted Data:", dates);
-    console.log("Totals:", totals, vehicleNumberId, vehicleNumber);
-    alert("Data submitted successfully!");
+    if (lastEditedRowIndex !== null) {
+      console.log("Last Edited Row Data:", dates[lastEditedRowIndex]);
+    }
+    // console.log("Submitted Data:", dates);
+    // console.log("Totals:", totals, vehicleNumberId, vehicleNumber);
+    // alert("Data submitted successfully!");
     const formData = new FormData();
-
-    formData.append("LogListData", JSON.stringify(dates));
-    formData.append("VenderVehicleId", vehicleNumberId || 21);
     formData.append("MonthNmber", parseInt(selectedMonth) || 1);
     formData.append("YearNumber", parseInt(yearNumber) || "");
-    formData.append("VechileRegisNo", vehicleNumber ||"");
-    formData.append("OpeningKM", "");
-    formData.append("ClosingKM", "");
-    formData.append("DieselAmount", "");
-    formData.append("DieselRate", "");
-    formData.append("Narration", "");
-    formData.append("TotalKM", "");
-    formData.append("LogDate", "");
-    formData.append("UserToken", "");
-    formData.append("IP", "");
-    formData.append("MAC", "");
-    formData.append("UserId", "");
-    formData.append("GeoLocation", "");
+    formData.append("OpeningKM", dates[lastEditedRowIndex]?.openingKm || "");
+    formData.append("ClosingKM", dates[lastEditedRowIndex]?.closingKm || "");
+    formData.append(
+      "DieselAmount",
+      dates[lastEditedRowIndex]?.dieselAmount || ""
+    );
+    formData.append("DieselRate", dates[lastEditedRowIndex]?.dieselRate || "");
+    formData.append("Narration", dates[lastEditedRowIndex]?.narration || "");
+    formData.append("TotalKM", dates[lastEditedRowIndex]?.totalKm || "");
+    formData.append("LogDate", dates[lastEditedRowIndex]?.date || "");
+    formData.append("LogListData", JSON.stringify(dates));
+    formData.append("VenderVehicleId", vehicleNumberId || 21);
+    formData.append("VechileRegisNo", vehicleNumber || "");
+    formData.append("UserToken", userData?.UserToken);
+    formData.append("IP", "1032.021.026");
+    formData.append("MAC", "FDDFDFG56456");
+    formData.append("UserId", userData.UserId);
+    formData.append("GeoLocation", "26.8467° N, 80.9462° E");
+
+    addMonthlyLogService(formData)
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.status === 1) {
+          alert("Data submitted successfully!");
+        }
+      })
+      .catch((err) => {
+        console.log("Error", err);
+        alert("Error in submission");
+      });
   };
 
   const totals = calculateTotals();
