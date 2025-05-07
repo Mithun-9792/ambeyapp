@@ -20,6 +20,7 @@ import {
 } from "../services/dashboard.services";
 import { set } from "react-hook-form";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CustomAlert from "../components/CustomAlert";
 
 function VehicleLog() {
   const [clients, setClients] = useState([]);
@@ -34,20 +35,9 @@ function VehicleLog() {
   const [dates, setDates] = useState([]);
   const [lastEditedRowIndex, setLastEditedRowIndex] = useState(null);
   const [userData, setUserData] = useState({});
-  const [tableData, setTableData] = useState(
-    Array(10).fill({
-      date: "",
-      openingKm: "",
-      closingKm: "",
-      totalKm: "",
-      dieselAmount: "",
-      dieselRate: "",
-      dieselVolume: "",
-      avgKmPerLtr: "",
-      narration: "",
-    })
-  );
-
+  const [isShow, setIsShow] = useState(false);
+  const [alertType, setAlertType] = useState("");
+  const [alertMsg, setAlertMsg] = useState("");
   const getUserData = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem("userData");
@@ -101,26 +91,26 @@ function VehicleLog() {
     setLastEditedRowIndex(index);
 
     // Auto-calculate Total Km if Opening and Closing are filled
-    if (field === "openingKm" || field === "closingKm") {
-      const opening = parseFloat(updatedDates[index].openingKm) || 0;
-      const closing = parseFloat(updatedDates[index].closingKm) || 0;
+    if (field === "OpeningKM" || field === "ClosingKM") {
+      const opening = parseFloat(updatedDates[index].OpeningKM) || 0;
+      const closing = parseFloat(updatedDates[index].ClosingKM) || 0;
       updatedDates[index].totalKm =
         closing > 0 && opening > 0 ? (closing - opening).toString() : "";
     }
 
     // Auto-calculate Avg Km per Ltr if Diesel Volume > 0
-    if (field === "dieselAmount" || field === "dieselRate") {
-      const dieselAmount = parseFloat(updatedDates[index].dieselAmount) || 0;
-      const dieselRate = parseFloat(updatedDates[index].dieselRate) || 0;
+    if (field === "DieselAmount" || field === "DieselRate") {
+      const DieselAmount = parseFloat(updatedDates[index].DieselAmount) || 0;
+      const DieselRate = parseFloat(updatedDates[index].DieselRate) || 0;
       updatedDates[index].dieselVolume =
-        dieselRate > 0 ? (dieselAmount / dieselRate).toFixed(2) : "";
+        DieselRate > 0 ? (DieselAmount / DieselRate).toFixed(2) : "";
     }
 
     if (
       field === "totalKm" ||
       field === "dieselVolume" ||
-      field === "dieselAmount" ||
-      field === "dieselRate"
+      field === "DieselAmount" ||
+      field === "DieselRate"
     ) {
       const totalKm = parseFloat(updatedDates[index].totalKm) || 0;
       const dieselVolume = parseFloat(updatedDates[index].dieselVolume) || 0;
@@ -156,15 +146,15 @@ function VehicleLog() {
         .replace(/ /g, "-");
 
       dateList.push({
-        date: formattedDate,
-        openingKm: "",
-        closingKm: "",
+        LogDate: formattedDate,
+        OpeningKM: "",
+        ClosingKM: "",
         totalKm: "",
-        dieselAmount: "",
-        dieselRate: "",
+        DieselAmount: "",
+        DieselRate: "",
         dieselVolume: "",
         avgKmPerLtr: "",
-        narration: "",
+        Narration: "",
       });
     }
 
@@ -177,7 +167,7 @@ function VehicleLog() {
       0
     );
     const totalDieselAmount = dates.reduce(
-      (sum, item) => sum + (parseFloat(item.dieselAmount) || 0),
+      (sum, item) => sum + (parseFloat(item.DieselAmount) || 0),
       0
     );
     const totalDieselVolume = dates.reduce(
@@ -191,28 +181,40 @@ function VehicleLog() {
   };
 
   const handleSubmit = () => {
-    const totals = calculateTotals();
+    // const totals = calculateTotals();
     if (lastEditedRowIndex !== null) {
       console.log("Last Edited Row Data:", dates[lastEditedRowIndex]);
     }
-    // console.log("Submitted Data:", dates);
+    console.log("Submitted Data:", dates);
     // console.log("Totals:", totals, vehicleNumberId, vehicleNumber);
     // alert("Data submitted successfully!");
     const formData = new FormData();
     formData.append("MonthNmber", parseInt(selectedMonth) || 1);
     formData.append("YearNumber", parseInt(yearNumber) || "");
-    formData.append("OpeningKM", dates[lastEditedRowIndex]?.openingKm || "");
-    formData.append("ClosingKM", dates[lastEditedRowIndex]?.closingKm || "");
+    formData.append(
+      "OpeningKM",
+      parseInt(dates[lastEditedRowIndex]?.OpeningKM) || ""
+    );
+    formData.append(
+      "ClosingKM",
+      parseInt(dates[lastEditedRowIndex]?.ClosingKM) || ""
+    );
     formData.append(
       "DieselAmount",
-      dates[lastEditedRowIndex]?.dieselAmount || ""
+      parseInt(dates[lastEditedRowIndex]?.DieselAmount) || ""
     );
-    formData.append("DieselRate", dates[lastEditedRowIndex]?.dieselRate || "");
-    formData.append("Narration", dates[lastEditedRowIndex]?.narration || "");
-    formData.append("TotalKM", dates[lastEditedRowIndex]?.totalKm || "");
-    formData.append("LogDate", dates[lastEditedRowIndex]?.date || "");
-    formData.append("LogListData", JSON.stringify(dates));
-    formData.append("VenderVehicleId", vehicleNumberId || 21);
+    formData.append(
+      "DieselRate",
+      parseInt(dates[lastEditedRowIndex]?.DieselRate) || ""
+    );
+    formData.append("Narration", dates[lastEditedRowIndex]?.Narration || "");
+    formData.append(
+      "TotalKM",
+      parseInt(dates[lastEditedRowIndex]?.totalKm) || ""
+    );
+    formData.append("LogDate", dates[lastEditedRowIndex]?.LogDate || "");
+    formData.append("LogListData", JSON.stringify([dates[lastEditedRowIndex]]));
+    formData.append("VenderVehicleId", parseInt(vehicleNumberId) || 21);
     formData.append("VechileRegisNo", vehicleNumber || "");
     formData.append("UserToken", userData?.UserToken);
     formData.append("IP", "1032.021.026");
@@ -222,12 +224,26 @@ function VehicleLog() {
 
     addMonthlyLogService(formData)
       .then((res) => {
-        console.log(res.data);
-        if (res.data.status === 1) {
-          alert("Data submitted successfully!");
+        if (res.data.ResponseStatus == 1) {
+          setIsShow(true);
+          setAlertType("success");
+          setAlertMsg(res.data.ResponseMessage);
+          // alert("Data submitted successfully!");
+          setDates([]);
+          setVehicleNumber("");
+          setVehicleNumberId("");
+          setSelectedMonth("");
+          setSelectedYear("");
+          setYearNumber(-1);
+        } else {
+          setIsShow(true);
+          setAlertType("error");
+          setAlertMsg(res.data.ResponseMessage);
+          // alert("Error in submission");
         }
       })
       .catch((err) => {
+        setIsShow(true);
         console.log("Error", err);
         alert("Error in submission");
       });
@@ -429,21 +445,21 @@ function VehicleLog() {
               {dates.map((item, index) => (
                 <View key={index} style={{ flexDirection: "row" }}>
                   <Text style={styles.cell}>{index + 1}</Text>
-                  <Text style={styles.cell}>{item.date}</Text>
+                  <Text style={styles.cell}>{item.LogDate}</Text>
                   <TextInput
                     style={styles.cellInput}
-                    value={item.openingKm}
+                    value={item.OpeningKM}
                     keyboardType="numeric"
                     onChangeText={(text) =>
-                      handleInputChange(index, "openingKm", text)
+                      handleInputChange(index, "OpeningKM", text)
                     }
                   />
                   <TextInput
                     style={styles.cellInput}
-                    value={item.closingKm}
+                    value={item.ClosingKM}
                     keyboardType="numeric"
                     onChangeText={(text) =>
-                      handleInputChange(index, "closingKm", text)
+                      handleInputChange(index, "ClosingKM", text)
                     }
                   />
                   <Text style={[styles.cell, { backgroundColor: "#e1ebff" }]}>
@@ -451,18 +467,18 @@ function VehicleLog() {
                   </Text>
                   <TextInput
                     style={styles.cellInput}
-                    value={item.dieselAmount}
+                    value={item.DieselAmount}
                     keyboardType="numeric"
                     onChangeText={(text) =>
-                      handleInputChange(index, "dieselAmount", text)
+                      handleInputChange(index, "DieselAmount", text)
                     }
                   />
                   <TextInput
                     style={styles.cellInput}
-                    value={item.dieselRate}
+                    value={item.DieselRate}
                     keyboardType="numeric"
                     onChangeText={(text) =>
-                      handleInputChange(index, "dieselRate", text)
+                      handleInputChange(index, "DieselRate", text)
                     }
                   />
                   <TextInput
@@ -478,9 +494,9 @@ function VehicleLog() {
                   </Text>
                   <TextInput
                     style={styles.cellInput}
-                    value={item.narration}
+                    value={item.Narration}
                     onChangeText={(text) =>
-                      handleInputChange(index, "narration", text)
+                      handleInputChange(index, "Narration", text)
                     }
                   />
                 </View>
@@ -528,6 +544,12 @@ function VehicleLog() {
           ) : null}
         </View>
       </ScrollView>
+      <CustomAlert
+        visible={isShow}
+        message={alertMsg}
+        type={alertType}
+        setVisible={setIsShow}
+      />
     </SafeAreaView>
   );
 }
