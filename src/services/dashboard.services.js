@@ -40,3 +40,15 @@ export const addMonthlyLogService = async (data) => {
     },
   });
 };
+
+export const getVehicleRunningMonthlyLogReport = async (data) => {
+  return await axios.post(
+    API_ROUTES.GET_VEHICLE_RUNNING_MONTHLY_LOG_REPORT,
+    data,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+};

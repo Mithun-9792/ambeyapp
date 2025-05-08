@@ -136,7 +136,16 @@ function Dashboard({ navigation }) {
         <ActionButton
           title="Vehicle Log"
           ImageName="file-text"
-          onPress={() => navigation.push(SCREENS.VEHICLELOG)}
+          onPress={() =>
+            navigation.push(SCREENS.VEHICLELOG, { isShowLogs: false })
+          }
+        />
+        <ActionButton
+          title="Show Vehicle Logs"
+          ImageName="file-text-o"
+          onPress={() =>
+            navigation.push(SCREENS.VEHICLELOG, { isShowLogs: true })
+          }
         />
       </View>
     </SafeAreaView>
@@ -186,7 +195,7 @@ const styles = StyleSheet.create({
   },
   btnRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     marginHorizontal: 20,
     flexWrap: "wrap",
   },

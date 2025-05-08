@@ -2,6 +2,8 @@ import { Picker } from "@react-native-picker/picker";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -16,13 +18,16 @@ import {
   getClientListService,
   getMonthsListService,
   getVehicleNumberListService,
+  getVehicleRunningMonthlyLogReport,
   getYearsListService,
 } from "../services/dashboard.services";
-import { set } from "react-hook-form";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CustomAlert from "../components/CustomAlert";
+import { useRoute } from "@react-navigation/native";
 
 function VehicleLog() {
+  const route = useRoute();
+  const { isShowLogs } = route.params;
   const [clients, setClients] = useState([]);
   const [months, setMonths] = useState([]);
   const [years, setYears] = useState([]);
@@ -33,11 +38,13 @@ function VehicleLog() {
   const [vehicleNumberId, setVehicleNumberId] = useState("");
   const [vehicleNumberList, setVehicleNumberList] = useState([]);
   const [dates, setDates] = useState([]);
-  const [lastEditedRowIndex, setLastEditedRowIndex] = useState(null);
   const [userData, setUserData] = useState({});
   const [isShow, setIsShow] = useState(false);
   const [alertType, setAlertType] = useState("");
   const [alertMsg, setAlertMsg] = useState("");
+  const [modifiedDates, setModifiedDates] = useState([]);
+  const [monthlyLogReports, setMonthlyLogReports] = useState([]);
+
   const getUserData = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem("userData");
@@ -83,12 +90,34 @@ function VehicleLog() {
       .catch((err) => console.log("Years List Error", err));
   }, []);
 
+  const getLogReportData = async () => {
+    const formData = new FormData();
+    formData.append("ClientId", "-1");
+    formData.append("VechileRegisNo", vehicleNumber);
+    formData.append("ContactPersonName", "");
+    formData.append("MonthNmber", parseInt(selectedMonth));
+    formData.append("YearNumber", parseInt(yearNumber));
+    formData.append("UserToken", "usertoken342342324");
+    formData.append("IP", "123.458.23.258");
+    formData.append("MAC", "macaddress");
+    formData.append("UserId", "25");
+    formData.append("GeoLocation", "64.5644,54.6546");
+
+    const response = await getVehicleRunningMonthlyLogReport(formData);
+    console.log("Log Report Data", response.data);
+    if (response.data.ResponseStatus == 1) {
+      setMonthlyLogReports(response.data.result);
+      setDates(response.data.result);
+    } else {
+      setIsShow(true);
+      setAlertType("error");
+      setAlertMsg(response.data.ResponseMessage);
+    }
+  };
+
   const handleInputChange = (index, field, value) => {
     const updatedDates = [...dates];
     updatedDates[index][field] = value;
-
-    // Track the last edited row index
-    setLastEditedRowIndex(index);
 
     // Auto-calculate Total Km if Opening and Closing are filled
     if (field === "OpeningKM" || field === "ClosingKM") {
@@ -117,6 +146,23 @@ function VehicleLog() {
       updatedDates[index].avgKmPerLtr =
         dieselVolume > 0 ? (totalKm / dieselVolume).toFixed(2) : "";
     }
+
+    // Save only the modified row in the modifiedDates state
+    setModifiedDates((prev) => {
+      const existingIndex = prev.findIndex((item) => item.index === index);
+      if (existingIndex !== -1) {
+        // Update the existing row
+        const updatedModifiedDates = [...prev];
+        updatedModifiedDates[existingIndex] = {
+          index,
+          data: updatedDates[index],
+        };
+        return updatedModifiedDates;
+      } else {
+        // Add a new row
+        return [...prev, { index, data: updatedDates[index] }];
+      }
+    });
 
     setDates(updatedDates);
   };
@@ -181,39 +227,12 @@ function VehicleLog() {
   };
 
   const handleSubmit = () => {
-    // const totals = calculateTotals();
-    if (lastEditedRowIndex !== null) {
-      console.log("Last Edited Row Data:", dates[lastEditedRowIndex]);
-    }
-    console.log("Submitted Data:", dates);
-    // console.log("Totals:", totals, vehicleNumberId, vehicleNumber);
-    // alert("Data submitted successfully!");
+    const modifiedRowsArray = modifiedDates.map((item) => item.data);
+
     const formData = new FormData();
+    formData.append("LogListData", JSON.stringify(modifiedRowsArray));
     formData.append("MonthNmber", parseInt(selectedMonth) || 1);
     formData.append("YearNumber", parseInt(yearNumber) || "");
-    formData.append(
-      "OpeningKM",
-      parseInt(dates[lastEditedRowIndex]?.OpeningKM) || ""
-    );
-    formData.append(
-      "ClosingKM",
-      parseInt(dates[lastEditedRowIndex]?.ClosingKM) || ""
-    );
-    formData.append(
-      "DieselAmount",
-      parseInt(dates[lastEditedRowIndex]?.DieselAmount) || ""
-    );
-    formData.append(
-      "DieselRate",
-      parseInt(dates[lastEditedRowIndex]?.DieselRate) || ""
-    );
-    formData.append("Narration", dates[lastEditedRowIndex]?.Narration || "");
-    formData.append(
-      "TotalKM",
-      parseInt(dates[lastEditedRowIndex]?.totalKm) || ""
-    );
-    formData.append("LogDate", dates[lastEditedRowIndex]?.LogDate || "");
-    formData.append("LogListData", JSON.stringify([dates[lastEditedRowIndex]]));
     formData.append("VenderVehicleId", parseInt(vehicleNumberId) || 21);
     formData.append("VechileRegisNo", vehicleNumber || "");
     formData.append("UserToken", userData?.UserToken);
@@ -221,14 +240,13 @@ function VehicleLog() {
     formData.append("MAC", "FDDFDFG56456");
     formData.append("UserId", userData.UserId);
     formData.append("GeoLocation", "26.8467° N, 80.9462° E");
-
+    console.log(formData);
     addMonthlyLogService(formData)
       .then((res) => {
         if (res.data.ResponseStatus == 1) {
           setIsShow(true);
           setAlertType("success");
           setAlertMsg(res.data.ResponseMessage);
-          // alert("Data submitted successfully!");
           setDates([]);
           setVehicleNumber("");
           setVehicleNumberId("");
@@ -239,7 +257,6 @@ function VehicleLog() {
           setIsShow(true);
           setAlertType("error");
           setAlertMsg(res.data.ResponseMessage);
-          // alert("Error in submission");
         }
       })
       .catch((err) => {
@@ -293,9 +310,17 @@ function VehicleLog() {
     setVehicleNumberList([]);
   };
   return (
-    <SafeAreaView>
-      <ScrollView>
-        <View style={{ margin: 30 }}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: 20, // Add padding to ensure the button is visible
+        }}
+      >
+        <View style={{ padding: 30 }}>
           <View style={[styles.inputControl, { flexDirection: "row", gap: 5 }]}>
             <View style={{ flex: 1 }}>
               <TextInput
@@ -379,7 +404,7 @@ function VehicleLog() {
                 selectedValue={selectedYear}
                 onValueChange={(value) => {
                   setSelectedYear(value.Year);
-                  setYearNumber(value.YearId);
+                  setYearNumber(value.Year);
                 }}
                 style={styles.picker}
                 mode="dropdown"
@@ -398,7 +423,7 @@ function VehicleLog() {
 
           <CustomButton
             btnText={"Show"}
-            onPress={generateDates}
+            onPress={isShowLogs ? getLogReportData : generateDates}
             style={{
               backgroundColor: "green",
               padding: 10,
@@ -445,33 +470,41 @@ function VehicleLog() {
               {dates.map((item, index) => (
                 <View key={index} style={{ flexDirection: "row" }}>
                   <Text style={styles.cell}>{index + 1}</Text>
-                  <Text style={styles.cell}>{item.LogDate}</Text>
+                  <Text style={styles.cell}>
+                    {item?.LogDate || item?.CRDay1}
+                  </Text>
                   <TextInput
                     style={styles.cellInput}
-                    value={item.OpeningKM}
+                    value={item.OpeningKM || item?.OpeningKm}
                     keyboardType="numeric"
                     onChangeText={(text) =>
                       handleInputChange(index, "OpeningKM", text)
                     }
+                    readOnly={isShowLogs}
+                    editable={!isShowLogs}
                   />
                   <TextInput
                     style={styles.cellInput}
-                    value={item.ClosingKM}
+                    value={item.ClosingKM || item?.ClosingKm}
                     keyboardType="numeric"
                     onChangeText={(text) =>
                       handleInputChange(index, "ClosingKM", text)
                     }
+                    readOnly={isShowLogs}
+                    editable={!isShowLogs}
                   />
                   <Text style={[styles.cell, { backgroundColor: "#e1ebff" }]}>
-                    {item.totalKm}
+                    {item?.totalKm || item?.TotalKm}
                   </Text>
                   <TextInput
                     style={styles.cellInput}
-                    value={item.DieselAmount}
+                    value={item.DieselAmount || item?.Amount}
                     keyboardType="numeric"
                     onChangeText={(text) =>
                       handleInputChange(index, "DieselAmount", text)
                     }
+                    readOnly={isShowLogs}
+                    editable={!isShowLogs}
                   />
                   <TextInput
                     style={styles.cellInput}
@@ -480,17 +513,21 @@ function VehicleLog() {
                     onChangeText={(text) =>
                       handleInputChange(index, "DieselRate", text)
                     }
+                    readOnly={isShowLogs}
+                    editable={!isShowLogs}
                   />
                   <TextInput
                     style={styles.cellInput}
-                    value={item.dieselVolume}
+                    value={item.dieselVolume || item?.DieselQTYLTR}
                     keyboardType="numeric"
                     onChangeText={(text) =>
                       handleInputChange(index, "dieselVolume", text)
                     }
+                    readOnly={isShowLogs}
+                    editable={!isShowLogs}
                   />
                   <Text style={[styles.cell, { backgroundColor: "#e1ebff" }]}>
-                    {item.avgKmPerLtr}
+                    {item.avgKmPerLtr || item?.Average}
                   </Text>
                   <TextInput
                     style={styles.cellInput}
@@ -498,12 +535,14 @@ function VehicleLog() {
                     onChangeText={(text) =>
                       handleInputChange(index, "Narration", text)
                     }
+                    readOnly={isShowLogs}
+                    editable={!isShowLogs}
                   />
                 </View>
               ))}
 
               {/* Totals Row */}
-              {dates.length ? (
+              {dates.length && !isShowLogs ? (
                 <View
                   style={{ flexDirection: "row", backgroundColor: "#f0f0f0" }}
                 >
@@ -530,7 +569,7 @@ function VehicleLog() {
             </View>
           </ScrollView>
 
-          {dates.length ? (
+          {dates.length && !isShowLogs ? (
             <CustomButton
               btnText={"Submit"}
               onPress={handleSubmit}
@@ -550,7 +589,7 @@ function VehicleLog() {
         type={alertType}
         setVisible={setIsShow}
       />
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
