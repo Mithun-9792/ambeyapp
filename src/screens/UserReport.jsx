@@ -57,10 +57,6 @@ function UserReport({ navigation }) {
 
   useEffect(() => {
     const formdata = new FormData();
-    // formdata.append("NomnieeTypeId", "-1");
-    // formdata.append("TitleId", "-1");
-    // formdata.append("StateId", "-1");
-    // formdata.append("CityId", "-1");
     formdata.append("LocationId", "-1");
     formdata.append("DesigantionID", "-1");
     formdata.append("DepartmentId", "-1");
@@ -100,19 +96,6 @@ function UserReport({ navigation }) {
     getUserData();
   }, []);
 
-  // const handleFilter = () => {
-  //   // Perform your filter logic here
-  //   console.log("Filter clicked");
-  //   console.log("Registration ID:", registrationId);
-  //   console.log("Mobile No:", mobileNo);
-  //   console.log("Name:", name);
-  //   console.log("Designation 1:", designation);
-  //   console.log("Designation 2:", department);
-  //   console.log("Designation 3:", location);
-
-  //   // Set isSearched to true to indicate that the search has been performed
-  //   setIsSearched(true);
-  // };
   const handleFilter = () => {
     if (
       registrationId.length === 0 &&
@@ -128,13 +111,13 @@ function UserReport({ navigation }) {
       return;
     }
 
-    console.log(location, "location", department, designation);
+    // console.log(location, "location", department, designation);
     setIsSearched(true);
     const formData = new FormData();
     formData.append("MemberID", "-1");
     formData.append("Name", name || "");
     formData.append("RegCode", registrationId);
-    formData.append("MobileNo", mobileNo);
+    formData.append("MobileNo", mobileNo.toString());
     formData.append("Status", "Z");
     formData.append("M32_DepartmentId", parseInt(department) || -1);
     formData.append("M14_DesignationID", parseInt(designation) || -1);
@@ -149,8 +132,14 @@ function UserReport({ navigation }) {
 
     getEmployeeDetail(formData)
       .then((res) => {
-        // console.log("Employee Details:", res.data.result, res.data.result.length);
-        setEmployeeData(res.data.result);
+        console.log("Employee Details:", res.data, res.data.result.length);
+        if (res.data.ResponseStatus == 1) {
+          setEmployeeData(res.data.result);
+        } else {
+          setAlertType("info");
+          setAlertMsg(res.data.ResponseMessage);
+          setIsShow(true);
+        }
       })
       .catch((err) => {
         console.log("Error fetching employee details:", err);
@@ -167,14 +156,6 @@ function UserReport({ navigation }) {
     setIsSearched(false);
     setEmployeeData([]);
   };
-
-  // const employeeData = [
-  //   {
-  //     RegistrationCode: "12345",
-  //     Name: "John Doe",
-  //     MobileNo: "1234567890",
-  //   },
-  // ];
 
   const renderItem = ({ item }) => (
     <View style={styles.Tablerow}>

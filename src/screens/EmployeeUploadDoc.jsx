@@ -120,7 +120,7 @@ function EmployeeUploadDoc() {
 
     getEmpDoc(formData)
       .then((res) => {
-        // console.log("doc", res.data?.result);
+        console.log("doc", res.data?.result);
         setUserDocs(res.data?.result);
       })
       .catch((err) => {
@@ -155,8 +155,14 @@ function EmployeeUploadDoc() {
 
     getEmployeeDetail(formData)
       .then((res) => {
-        // console.log("Employee Details:", res.data.result);
-        setEmployeeData(res.data.result);
+        // console.log("Employee Details:", res.data);
+        if (res.data.ResponseStatus == 1) {
+          setEmployeeData(res.data.result);
+        } else {
+          setAlertType("info");
+          setAlertMsg(res.data.ResponseMessage);
+          setIsShow(true);
+        }
       })
       .catch((err) => {
         console.log("Error fetching employee details:", err);
@@ -247,7 +253,7 @@ function EmployeeUploadDoc() {
 
           // Refresh document list
           handleGetDoc();
-        }else{
+        } else {
           setAlertType("info");
           setAlertMsg(res?.data?.ResponseMessage);
           setIsShow(true);
@@ -406,7 +412,7 @@ function EmployeeUploadDoc() {
                         <TextInput
                           style={styles.input}
                           placeholder="Select Expiry Date"
-                          value={expireDate.toLocaleDateString('en-GB')}
+                          value={expireDate.toLocaleDateString("en-GB")}
                           editable={false}
                           pointerEvents="none"
                         />
@@ -424,7 +430,7 @@ function EmployeeUploadDoc() {
                               setExpireDate(currentDate);
                               setValue(
                                 "DocExpiryDate",
-                                currentDate.toLocaleDateString('en-GB'),
+                                currentDate.toLocaleDateString("en-GB"),
                                 {
                                   shouldValidate: true, // ✅ triggers validation
                                   shouldDirty: true, // ✅ marks it as user-edited

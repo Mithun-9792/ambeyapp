@@ -21,6 +21,7 @@
     "ambey": "file:",
     "axios": "^1.8.4",
     "expo": "^53.0.0",
+    "expo-checkbox": "~4.1.4",
     "expo-image-picker": "~16.1.4",
     "expo-location": "~18.1.4",
     "expo-splash-screen": "~0.30.8",
@@ -30,12 +31,12 @@
     "react-hook-form": "^7.55.0",
     "react-native": "0.79.2",
     "react-native-device-info": "^14.0.4",
+    "react-native-keyboard-aware-scroll-view": "^0.9.5",
     "react-native-pager-view": "6.7.1",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.10.0",
     "react-native-vector-icons": "^10.2.0",
-    "yup": "^1.6.1",
-    "expo-checkbox": "~4.1.4"
+    "yup": "^1.6.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

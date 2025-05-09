@@ -2,6 +2,7 @@ import { Picker } from "@react-native-picker/picker";
 import React, { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -9,6 +10,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native";
@@ -314,58 +316,63 @@ function VehicleLog() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
-      <ScrollView
-        contentContainerStyle={{
-          flexGrow: 1,
-          paddingBottom: 20, // Add padding to ensure the button is visible
-        }}
-      >
-        <View style={{ padding: 30 }}>
-          <View style={[styles.inputControl, { flexDirection: "row", gap: 5 }]}>
-            <View style={{ flex: 1 }}>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter Vehicle No"
-                value={vehicleNumber}
-                onChangeText={handleTextChange}
-              />
-              {vehicleNumberList.length > 0 && (
-                <View
-                  style={{
-                    position: "absolute", // Keep absolute if you want it to overlay
-                    top: styles.input.height || 40, // Position below the TextInput (adjust height if needed)
-                    left: 0,
-                    right: 0,
-                    backgroundColor: "#fff",
-                    borderWidth: 1,
-                    borderColor: "#ccc",
-                    borderRadius: 5,
-                    maxHeight: 200,
-                    zIndex: 20,
-                  }}
-                >
-                  <FlatList
-                    data={vehicleNumberList}
-                    keyExtractor={(item) => item?.id?.toString()}
-                    renderItem={({ item }) => (
-                      <TouchableOpacity
-                        onPress={() => {
-                          setVehicleNumberId(item?.id);
-                          handleSelect(item?.VechileNo);
-                        }}
-                        style={styles.dropdownItem}
-                      >
-                        <Text>{item?.VechileNo}</Text>
-                      </TouchableOpacity>
-                    )}
-                    keyboardShouldPersistTaps="handled"
-                    nestedScrollEnabled={true}
-                    pointerEvents="auto"
-                  />
-                </View>
-              )}
-            </View>
-            {/* <View style={[styles.pickerContainer]}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <ScrollView
+          // keyboardShouldPersistTaps="handled"
+          scrollEnabled={true}
+          contentContainerStyle={{
+            flexGrow: 1,
+            paddingBottom: 20, // Add padding to ensure the button is visible
+          }}
+        >
+          <View style={{ padding: 30 }}>
+            <View
+              style={[styles.inputControl, { flexDirection: "row", gap: 5 }]}
+            >
+              <View style={{ flex: 1 }}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Vehicle No"
+                  value={vehicleNumber}
+                  onChangeText={handleTextChange}
+                />
+                {vehicleNumberList.length > 0 && (
+                  <View
+                    style={{
+                      position: "absolute", // Keep absolute if you want it to overlay
+                      top: styles.input.height || 40, // Position below the TextInput (adjust height if needed)
+                      left: 0,
+                      right: 0,
+                      backgroundColor: "#fff",
+                      borderWidth: 1,
+                      borderColor: "#ccc",
+                      borderRadius: 5,
+                      maxHeight: 200,
+                      zIndex: 20,
+                    }}
+                  >
+                    <FlatList
+                      data={vehicleNumberList}
+                      keyExtractor={(item) => item?.id?.toString()}
+                      renderItem={({ item }) => (
+                        <TouchableOpacity
+                          onPress={() => {
+                            setVehicleNumberId(item?.id);
+                            handleSelect(item?.VechileNo);
+                          }}
+                          style={styles.dropdownItem}
+                        >
+                          <Text>{item?.VechileNo}</Text>
+                        </TouchableOpacity>
+                      )}
+                      keyboardShouldPersistTaps="handled"
+                      nestedScrollEnabled={true}
+                      pointerEvents="auto"
+                    />
+                  </View>
+                )}
+              </View>
+              {/* <View style={[styles.pickerContainer]}>
               <Picker style={styles.picker} mode="dropdown">
                 <Picker.Item label="Select Client" value="" />
                 {clients?.map((item) => (
@@ -377,218 +384,243 @@ function VehicleLog() {
                 ))}
               </Picker>
             </View> */}
-          </View>
-
-          <View style={[styles.inputControl, { flexDirection: "row", gap: 5 }]}>
-            <View style={[styles.pickerContainer, { flex: 1 }]}>
-              <Picker
-                selectedValue={selectedMonth}
-                onValueChange={(value) => {
-                  setSelectedMonth(value);
-                }}
-                style={styles.picker}
-                mode="dropdown"
-              >
-                <Picker.Item label="Month" value="" />
-                {months?.map((item) => (
-                  <Picker.Item
-                    label={item.MonthName}
-                    value={item.MonthNumber}
-                    key={item.MonthNumber}
-                  />
-                ))}
-              </Picker>
             </View>
-            <View style={[styles.pickerContainer, { flex: 1 }]}>
-              <Picker
-                selectedValue={selectedYear}
-                onValueChange={(value) => {
-                  setSelectedYear(value.Year);
-                  setYearNumber(value.Year);
-                }}
-                style={styles.picker}
-                mode="dropdown"
-              >
-                <Picker.Item label="Year" value="" />
-                {years?.map((item) => (
-                  <Picker.Item
-                    label={item.Year}
-                    value={item}
-                    key={item.YearId}
-                  />
-                ))}
-              </Picker>
-            </View>
-          </View>
 
-          <CustomButton
-            btnText={"Show"}
-            onPress={isShowLogs ? getLogReportData : generateDates}
-            style={{
-              backgroundColor: "green",
-              padding: 10,
-              borderRadius: 10,
-            }}
-          />
-
-          <ScrollView horizontal>
-            {/* Table Area */}
-            <View style={{ marginTop: 30 }}>
-              {/* Table Header */}
-              {dates.length ? (
-                <View
-                  style={{ flexDirection: "row", backgroundColor: "#e1ebff" }}
+            <View
+              style={[styles.inputControl, { flexDirection: "row", gap: 5 }]}
+            >
+              <View style={[styles.pickerContainer, { flex: 1 }]}>
+                <Picker
+                  selectedValue={selectedMonth}
+                  onValueChange={(value) => {
+                    setSelectedMonth(value);
+                  }}
+                  style={styles.picker}
+                  mode="dropdown"
                 >
-                  <Text style={[styles.cell, styles.headerCell]}>S.No</Text>
-                  <Text style={[styles.cell, styles.headerCell]}>Date</Text>
-                  <Text style={[styles.cell, styles.headerCell]}>
-                    Opening Km
-                  </Text>
-                  <Text style={[styles.cell, styles.headerCell]}>
-                    Closing Km
-                  </Text>
-                  <Text style={[styles.cell, styles.headerCell]}>Total Km</Text>
-                  <Text style={[styles.cell, styles.headerCell]}>
-                    Diesel Amt
-                  </Text>
-                  <Text style={[styles.cell, styles.headerCell]}>
-                    Diesel Rate
-                  </Text>
-                  <Text style={[styles.cell, styles.headerCell]}>
-                    Diesel Vol
-                  </Text>
-                  <Text style={[styles.cell, styles.headerCell]}>
-                    Avg Km/Ltr
-                  </Text>
-                  <Text style={[styles.cell, styles.headerCell]}>
-                    Narration
-                  </Text>
-                </View>
-              ) : null}
-
-              {/* Table Body */}
-              {dates.map((item, index) => (
-                <View key={index} style={{ flexDirection: "row" }}>
-                  <Text style={styles.cell}>{index + 1}</Text>
-                  <Text style={styles.cell}>
-                    {item?.LogDate || item?.CRDay1}
-                  </Text>
-                  <TextInput
-                    style={styles.cellInput}
-                    value={item.OpeningKM || item?.OpeningKm}
-                    keyboardType="numeric"
-                    onChangeText={(text) =>
-                      handleInputChange(index, "OpeningKM", text)
-                    }
-                    readOnly={isShowLogs}
-                    editable={!isShowLogs}
-                  />
-                  <TextInput
-                    style={styles.cellInput}
-                    value={item.ClosingKM || item?.ClosingKm}
-                    keyboardType="numeric"
-                    onChangeText={(text) =>
-                      handleInputChange(index, "ClosingKM", text)
-                    }
-                    readOnly={isShowLogs}
-                    editable={!isShowLogs}
-                  />
-                  <Text style={[styles.cell, { backgroundColor: "#e1ebff" }]}>
-                    {item?.totalKm || item?.TotalKm}
-                  </Text>
-                  <TextInput
-                    style={styles.cellInput}
-                    value={item.DieselAmount || item?.Amount}
-                    keyboardType="numeric"
-                    onChangeText={(text) =>
-                      handleInputChange(index, "DieselAmount", text)
-                    }
-                    readOnly={isShowLogs}
-                    editable={!isShowLogs}
-                  />
-                  <TextInput
-                    style={styles.cellInput}
-                    value={item.DieselRate}
-                    keyboardType="numeric"
-                    onChangeText={(text) =>
-                      handleInputChange(index, "DieselRate", text)
-                    }
-                    readOnly={isShowLogs}
-                    editable={!isShowLogs}
-                  />
-                  <TextInput
-                    style={styles.cellInput}
-                    value={item.dieselVolume || item?.DieselQTYLTR}
-                    keyboardType="numeric"
-                    onChangeText={(text) =>
-                      handleInputChange(index, "dieselVolume", text)
-                    }
-                    readOnly={isShowLogs}
-                    editable={!isShowLogs}
-                  />
-                  <Text style={[styles.cell, { backgroundColor: "#e1ebff" }]}>
-                    {item.avgKmPerLtr || item?.Average}
-                  </Text>
-                  <TextInput
-                    style={styles.cellInput}
-                    value={item.Narration}
-                    onChangeText={(text) =>
-                      handleInputChange(index, "Narration", text)
-                    }
-                    readOnly={isShowLogs}
-                    editable={!isShowLogs}
-                  />
-                </View>
-              ))}
-
-              {/* Totals Row */}
-              {dates.length && !isShowLogs ? (
-                <View
-                  style={{ flexDirection: "row", backgroundColor: "#f0f0f0" }}
+                  <Picker.Item label="Month" value="" />
+                  {months?.map((item) => (
+                    <Picker.Item
+                      label={item.MonthName}
+                      value={item.MonthNumber}
+                      key={item.MonthNumber}
+                    />
+                  ))}
+                </Picker>
+              </View>
+              <View style={[styles.pickerContainer, { flex: 1 }]}>
+                <Picker
+                  selectedValue={selectedYear}
+                  onValueChange={(value) => {
+                    setSelectedYear(value.Year);
+                    setYearNumber(value.Year);
+                  }}
+                  style={styles.picker}
+                  mode="dropdown"
                 >
-                  <Text style={styles.cell}>-</Text>
-                  <Text style={styles.cell}>Totals</Text>
-                  <Text style={styles.cell}></Text>
-                  <Text style={styles.cell}></Text>
-                  <Text style={[styles.cell, { fontWeight: "bold" }]}>
-                    {totals.totalKm}
-                  </Text>
-                  <Text style={[styles.cell, { fontWeight: "bold" }]}>
-                    {totals.totalDieselAmount}
-                  </Text>
-                  <Text style={styles.cell}></Text>
-                  <Text style={[styles.cell, { fontWeight: "bold" }]}>
-                    {totals.totalDieselVolume}
-                  </Text>
-                  <Text style={[styles.cell, { fontWeight: "bold" }]}>
-                    {totals.avgKmPerLtr}
-                  </Text>
-                  <Text style={styles.cell}></Text>
-                </View>
-              ) : null}
+                  <Picker.Item label="Year" value="" />
+                  {years?.map((item) => (
+                    <Picker.Item
+                      label={item.Year}
+                      value={item}
+                      key={item.YearId}
+                    />
+                  ))}
+                </Picker>
+              </View>
             </View>
-          </ScrollView>
 
-          {dates.length && !isShowLogs ? (
             <CustomButton
-              btnText={"Submit"}
-              onPress={handleSubmit}
+              btnText={"Show"}
+              onPress={isShowLogs ? getLogReportData : generateDates}
               style={{
                 backgroundColor: "green",
                 padding: 10,
                 borderRadius: 10,
-                marginTop: 20,
               }}
             />
-          ) : null}
-        </View>
-      </ScrollView>
-      <CustomAlert
-        visible={isShow}
-        message={alertMsg}
-        type={alertType}
-        setVisible={setIsShow}
-      />
+            <CustomAlert
+              visible={isShow}
+              message={alertMsg}
+              type={alertType}
+              setVisible={setIsShow}
+            />
+
+            <ScrollView
+              horizontal
+              nestedScrollEnabled={true}
+              scrollEnabled={true}
+              contentContainerStyle={{ minWidth: "100%", paddingBottom: 20 }}
+            >
+              {/* Table Area */}
+              <View style={{ marginTop: 30 }}>
+                {/* Table Header */}
+                {dates.length ? (
+                  <View
+                    style={{ flexDirection: "row", backgroundColor: "#e1ebff" }}
+                  >
+                    <Text style={[styles.cell, styles.headerCell]}>S.No</Text>
+                    <Text style={[styles.cell, styles.headerCell]}>Date</Text>
+                    <Text style={[styles.cell, styles.headerCell]}>
+                      Opening Km
+                    </Text>
+                    <Text style={[styles.cell, styles.headerCell]}>
+                      Closing Km
+                    </Text>
+                    <Text style={[styles.cell, styles.headerCell]}>
+                      Total Km
+                    </Text>
+                    <Text style={[styles.cell, styles.headerCell]}>
+                      Diesel Amt
+                    </Text>
+                    <Text style={[styles.cell, styles.headerCell]}>
+                      Diesel Rate
+                    </Text>
+                    <Text style={[styles.cell, styles.headerCell]}>
+                      Diesel Vol
+                    </Text>
+                    <Text style={[styles.cell, styles.headerCell]}>
+                      Avg Km/Ltr
+                    </Text>
+                    <Text style={[styles.cell, styles.headerCell]}>
+                      Narration
+                    </Text>
+                  </View>
+                ) : null}
+
+                {/* Table Body */}
+                {dates.map((item, index) => (
+                  <View
+                    key={item?.LogDate || item?.CRDay1}
+                    style={{ flexDirection: "row" }}
+                  >
+                    <Text style={styles.cell}>{index + 1}</Text>
+                    <Text style={styles.cell}>
+                      {item?.LogDate || item?.CRDay1}
+                    </Text>
+                    <View style={styles.cell}>
+                      <TextInput
+                        style={{ textAlign: "center" }}
+                        value={item.OpeningKM || item?.OpeningKm}
+                        keyboardType="numeric"
+                        onChangeText={(text) =>
+                          handleInputChange(index, "OpeningKM", text)
+                        }
+                        readOnly={isShowLogs}
+                        editable={!isShowLogs}
+                      />
+                    </View>
+                    <View style={styles.cell}>
+                      <TextInput
+                        style={{ textAlign: "center" }}
+                        value={item.ClosingKM || item?.ClosingKm}
+                        keyboardType="numeric"
+                        onChangeText={(text) =>
+                          handleInputChange(index, "ClosingKM", text)
+                        }
+                        readOnly={isShowLogs}
+                        editable={!isShowLogs}
+                      />
+                    </View>
+                    <Text style={[styles.cell, { backgroundColor: "#e1ebff" }]}>
+                      {item?.totalKm || item?.TotalKm}
+                    </Text>
+                    <View style={styles.cell}>
+                      <TextInput
+                        style={{ textAlign: "center" }}
+                        value={item.DieselAmount || item?.Amount}
+                        keyboardType="numeric"
+                        onChangeText={(text) =>
+                          handleInputChange(index, "DieselAmount", text)
+                        }
+                        readOnly={isShowLogs}
+                        editable={!isShowLogs}
+                      />
+                    </View>
+                    <View style={styles.cell}>
+                      <TextInput
+                        style={{ textAlign: "center" }}
+                        value={item.DieselRate}
+                        keyboardType="numeric"
+                        onChangeText={(text) =>
+                          handleInputChange(index, "DieselRate", text)
+                        }
+                        readOnly={isShowLogs}
+                        editable={!isShowLogs}
+                      />
+                    </View>
+                    <View style={styles.cell}>
+                      <TextInput
+                        style={{ textAlign: "center" }}
+                        value={item.dieselVolume || item?.DieselQTYLTR}
+                        keyboardType="numeric"
+                        onChangeText={(text) =>
+                          handleInputChange(index, "dieselVolume", text)
+                        }
+                        readOnly={isShowLogs}
+                        editable={!isShowLogs}
+                      />
+                    </View>
+                    <Text style={[styles.cell, { backgroundColor: "#e1ebff" }]}>
+                      {item.avgKmPerLtr || item?.Average}
+                    </Text>
+                    <View style={styles.cell}>
+                      <TextInput
+                        style={{ textAlign: "center" }}
+                        value={item.Narration}
+                        onChangeText={(text) =>
+                          handleInputChange(index, "Narration", text)
+                        }
+                        readOnly={isShowLogs}
+                        editable={!isShowLogs}
+                      />
+                    </View>
+                  </View>
+                ))}
+
+                {/* Totals Row */}
+                {dates.length && !isShowLogs ? (
+                  <View
+                    style={{ flexDirection: "row", backgroundColor: "#f0f0f0" }}
+                  >
+                    <Text style={styles.cell}>-</Text>
+                    <Text style={styles.cell}>Totals</Text>
+                    <Text style={styles.cell}></Text>
+                    <Text style={styles.cell}></Text>
+                    <Text style={[styles.cell, { fontWeight: "bold" }]}>
+                      {totals.totalKm}
+                    </Text>
+                    <Text style={[styles.cell, { fontWeight: "bold" }]}>
+                      {totals.totalDieselAmount}
+                    </Text>
+                    <Text style={styles.cell}></Text>
+                    <Text style={[styles.cell, { fontWeight: "bold" }]}>
+                      {totals.totalDieselVolume}
+                    </Text>
+                    <Text style={[styles.cell, { fontWeight: "bold" }]}>
+                      {totals.avgKmPerLtr}
+                    </Text>
+                    <Text style={styles.cell}></Text>
+                  </View>
+                ) : null}
+              </View>
+            </ScrollView>
+
+            {dates.length && !isShowLogs ? (
+              <CustomButton
+                btnText={"Submit"}
+                onPress={handleSubmit}
+                style={{
+                  backgroundColor: "green",
+                  padding: 10,
+                  borderRadius: 10,
+                  marginTop: 20,
+                }}
+              />
+            ) : null}
+          </View>
+        </ScrollView>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 }
@@ -644,7 +676,8 @@ const styles = StyleSheet.create({
   cell: {
     borderWidth: 1,
     borderColor: "#ccc",
-    padding: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
     width: 110,
     height: 50,
     textAlign: "center",
@@ -654,14 +687,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#e1ebff",
     fontWeight: "bold",
   },
-  cellInput: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    paddingHorizontal: 8,
-    width: 110,
-    height: 50,
-    textAlign: "center",
-  },
+
+  // cellInput: {
+  //   borderWidth: 1,
+  //   borderColor: "#ccc",
+  //   paddingHorizontal: 8,
+  //   width: 110,
+  //   height: 50,
+  //   textAlign: "center",
+  // },
 
   headerText: {
     fontWeight: "bold",
