@@ -26,6 +26,8 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CustomAlert from "../components/CustomAlert";
 import { useRoute } from "@react-navigation/native";
+import { COLORS } from "../constants/colors";
+import VehicleNumberDropdown from "../components/VehicleNumberDropdown";
 
 function VehicleLog() {
   const route = useRoute();
@@ -122,31 +124,31 @@ function VehicleLog() {
     updatedDates[index][field] = value;
 
     // Auto-calculate Total Km if Opening and Closing are filled
-    if (field === "OpeningKM" || field === "ClosingKM") {
-      const opening = parseFloat(updatedDates[index].OpeningKM) || 0;
-      const closing = parseFloat(updatedDates[index].ClosingKM) || 0;
-      updatedDates[index].totalKm =
+    if (field === "OpeningKm" || field === "ClosingKm") {
+      const opening = parseFloat(updatedDates[index].OpeningKm) || 0;
+      const closing = parseFloat(updatedDates[index].ClosingKm) || 0;
+      updatedDates[index].TotalKm =
         closing > 0 && opening > 0 ? (closing - opening).toString() : "";
     }
 
     // Auto-calculate Avg Km per Ltr if Diesel Volume > 0
-    if (field === "DieselAmount" || field === "DieselRate") {
-      const DieselAmount = parseFloat(updatedDates[index].DieselAmount) || 0;
+    if (field === "Amount" || field === "DieselRate") {
+      const Amount = parseFloat(updatedDates[index].Amount) || 0;
       const DieselRate = parseFloat(updatedDates[index].DieselRate) || 0;
-      updatedDates[index].dieselVolume =
-        DieselRate > 0 ? (DieselAmount / DieselRate).toFixed(2) : "";
+      updatedDates[index].DieselQTYLTR =
+        DieselRate > 0 ? (Amount / DieselRate).toFixed(2) : "";
     }
 
     if (
-      field === "totalKm" ||
-      field === "dieselVolume" ||
-      field === "DieselAmount" ||
+      field === "TotalKm" ||
+      field === "DieselQTYLTR" ||
+      field === "Amount" ||
       field === "DieselRate"
     ) {
-      const totalKm = parseFloat(updatedDates[index].totalKm) || 0;
-      const dieselVolume = parseFloat(updatedDates[index].dieselVolume) || 0;
-      updatedDates[index].avgKmPerLtr =
-        dieselVolume > 0 ? (totalKm / dieselVolume).toFixed(2) : "";
+      const TotalKm = parseFloat(updatedDates[index].TotalKm) || 0;
+      const DieselQTYLTR = parseFloat(updatedDates[index].DieselQTYLTR) || 0;
+      updatedDates[index].Average =
+        DieselQTYLTR > 0 ? (TotalKm / DieselQTYLTR).toFixed(2) : "";
     }
 
     // Save only the modified row in the modifiedDates state
@@ -194,14 +196,14 @@ function VehicleLog() {
         .replace(/ /g, "-");
 
       dateList.push({
-        LogDate: formattedDate,
-        OpeningKM: "",
-        ClosingKM: "",
-        totalKm: "",
-        DieselAmount: "",
+        CRDay1: formattedDate,
+        OpeningKm: "",
+        ClosingKm: "",
+        TotalKm: "",
+        Amount: "",
         DieselRate: "",
-        dieselVolume: "",
-        avgKmPerLtr: "",
+        DieselQTYLTR: "",
+        Average: "",
         Narration: "",
       });
     }
@@ -210,27 +212,36 @@ function VehicleLog() {
   };
 
   const calculateTotals = () => {
-    const totalKm = dates.reduce(
-      (sum, item) => sum + (parseFloat(item.totalKm) || 0),
+    const TotalKm = dates.reduce(
+      (sum, item) => sum + (parseFloat(item.TotalKm) || 0),
       0
     );
     const totalDieselAmount = dates.reduce(
-      (sum, item) => sum + (parseFloat(item.DieselAmount) || 0),
+      (sum, item) => sum + (parseFloat(item.Amount) || 0),
       0
     );
     const totalDieselVolume = dates.reduce(
-      (sum, item) => sum + (parseFloat(item.dieselVolume) || 0),
+      (sum, item) => sum + (parseFloat(item.DieselQTYLTR) || 0),
       0
     );
-    const avgKmPerLtr =
-      totalDieselVolume > 0 ? (totalKm / totalDieselVolume).toFixed(2) : 0;
+    const Average =
+      totalDieselVolume > 0 ? (TotalKm / totalDieselVolume).toFixed(2) : 0;
 
-    return { totalKm, totalDieselAmount, totalDieselVolume, avgKmPerLtr };
+    return { TotalKm, totalDieselAmount, totalDieselVolume, Average };
   };
 
   const handleSubmit = () => {
-    const modifiedRowsArray = modifiedDates.map((item) => item.data);
-
+    const modifiedRowsArray = modifiedDates.map((item) => ({
+      OpeningKM: item?.data?.OpeningKm,
+      ClosingKM: item?.data?.ClosingKm,
+      LogDate: item?.data?.CRDay1, // or use item.BillDate if needed
+      DieselAmount: item?.data?.TotalDeiselAmount,
+      DieselRate: item?.data?.DieselRate,
+      narration: item?.data?.Narration,
+      totalKm: item?.data?.SumKms,
+    }));
+    // console.log(modifiedRowsArray, "Modified Rows Array", modifiedDates);
+    // return;
     const formData = new FormData();
     formData.append("LogListData", JSON.stringify(modifiedRowsArray));
     formData.append("MonthNmber", parseInt(selectedMonth) || 1);
@@ -242,19 +253,20 @@ function VehicleLog() {
     formData.append("MAC", "FDDFDFG56456");
     formData.append("UserId", userData.UserId);
     formData.append("GeoLocation", "26.8467° N, 80.9462° E");
-    console.log(formData);
+    // console.log(formData);
     addMonthlyLogService(formData)
       .then((res) => {
         if (res.data.ResponseStatus == 1) {
           setIsShow(true);
           setAlertType("success");
           setAlertMsg(res.data.ResponseMessage);
-          setDates([]);
-          setVehicleNumber("");
-          setVehicleNumberId("");
-          setSelectedMonth("");
-          setSelectedYear("");
-          setYearNumber(-1);
+          setModifiedDates([]);
+          // setDates([]);
+          // setVehicleNumber("");
+          // setVehicleNumberId("");
+          // setSelectedMonth("");
+          // setSelectedYear("");
+          // setYearNumber(-1);
         } else {
           setIsShow(true);
           setAlertType("error");
@@ -263,8 +275,8 @@ function VehicleLog() {
       })
       .catch((err) => {
         setIsShow(true);
-        console.log("Error", err);
-        alert("Error in submission");
+        setAlertType("error");
+        setAlertMsg(err?.response?.data?.message);
       });
   };
 
@@ -309,8 +321,14 @@ function VehicleLog() {
 
   const handleSelect = (vehicle) => {
     setVehicleNumber(vehicle);
-    setVehicleNumberList([]);
   };
+
+  const handleVehicleSelect = (selectedVehicle) => {
+    setVehicleNumber(selectedVehicle?.number); // Update the selected vehicle number
+    setVehicleNumberId(selectedVehicle?.id); // Update the vehicle ID
+    console.log("Selected Vehicle:", selectedVehicle);
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -329,67 +347,7 @@ function VehicleLog() {
             <View
               style={[styles.inputControl, { flexDirection: "row", gap: 5 }]}
             >
-              <View style={{ flex: 1 }}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Enter Vehicle No"
-                  value={vehicleNumber}
-                  onChangeText={handleTextChange}
-                />
-                {vehicleNumberList.length > 0 && (
-                  <View
-                    style={{
-                      position: "absolute", // Keep absolute if you want it to overlay
-                      top: styles.input.height || 40, // Position below the TextInput (adjust height if needed)
-                      left: 0,
-                      right: 0,
-                      backgroundColor: "#fff",
-                      borderWidth: 1,
-                      borderColor: "#ccc",
-                      borderRadius: 5,
-                      maxHeight: 200,
-                      zIndex: 20,
-                    }}
-                  >
-                    <FlatList
-                      data={vehicleNumberList}
-                      keyExtractor={(item) => item?.id?.toString()}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          onPress={() => {
-                            setVehicleNumberId(item?.id);
-                            handleSelect(item?.VechileNo);
-                          }}
-                          style={styles.dropdownItem}
-                        >
-                          <Text>{item?.VechileNo}</Text>
-                        </TouchableOpacity>
-                      )}
-                      keyboardShouldPersistTaps="handled"
-                      nestedScrollEnabled={true}
-                      pointerEvents="auto"
-                    />
-                  </View>
-                )}
-              </View>
-              {/* <View style={[styles.pickerContainer]}>
-              <Picker style={styles.picker} mode="dropdown">
-                <Picker.Item label="Select Client" value="" />
-                {clients?.map((item) => (
-                  <Picker.Item
-                    label={item.Branch}
-                    value={item.M10_BankId}
-                    key={item.M10_BankId}
-                  />
-                ))}
-              </Picker>
-            </View> */}
-            </View>
-
-            <View
-              style={[styles.inputControl, { flexDirection: "row", gap: 5 }]}
-            >
-              <View style={[styles.pickerContainer, { flex: 1 }]}>
+              <View style={[styles.pickerContainer, { flex: 1, zIndex: 1 }]}>
                 <Picker
                   selectedValue={selectedMonth}
                   onValueChange={(value) => {
@@ -412,8 +370,9 @@ function VehicleLog() {
                 <Picker
                   selectedValue={selectedYear}
                   onValueChange={(value) => {
-                    setSelectedYear(value.Year);
-                    setYearNumber(value.Year);
+                    console.log(value, "sleected year");
+                    setSelectedYear(value);
+                    setYearNumber(value);
                   }}
                   style={styles.picker}
                   mode="dropdown"
@@ -422,28 +381,28 @@ function VehicleLog() {
                   {years?.map((item) => (
                     <Picker.Item
                       label={item.Year}
-                      value={item}
+                      value={item?.Value}
                       key={item.YearId}
                     />
                   ))}
                 </Picker>
               </View>
             </View>
+            <View style={{ zIndex: 10, marginBottom: 10 }}>
+              <VehicleNumberDropdown onSelect={handleVehicleSelect} />
+            </View>
 
             <CustomButton
               btnText={"Show"}
-              onPress={isShowLogs ? getLogReportData : generateDates}
+              // onPress={isShowLogs ? getLogReportData : generateDates}
+              onPress={getLogReportData}
               style={{
-                backgroundColor: "green",
+                backgroundColor: COLORS.secondary,
                 padding: 10,
                 borderRadius: 10,
+                borderWidth: 1,
+                borderColor: COLORS.primary,
               }}
-            />
-            <CustomAlert
-              visible={isShow}
-              message={alertMsg}
-              type={alertType}
-              setVisible={setIsShow}
             />
 
             <ScrollView
@@ -491,55 +450,71 @@ function VehicleLog() {
                 {/* Table Body */}
                 {dates.map((item, index) => (
                   <View
-                    key={item?.LogDate || item?.CRDay1}
+                    key={item?.CRDay1 || item?.CRDay1}
                     style={{ flexDirection: "row" }}
                   >
                     <Text style={styles.cell}>{index + 1}</Text>
                     <Text style={styles.cell}>
-                      {item?.LogDate || item?.CRDay1}
+                      {item?.CRDay1 || item?.CRDay1}
                     </Text>
-                    <View style={styles.cell}>
+                    <View style={styles.cellInput}>
                       <TextInput
-                        style={{ textAlign: "center" }}
-                        value={item.OpeningKM || item?.OpeningKm}
+                        style={{
+                          textAlign: "center",
+                          textAlignVertical: "center", // Vertically center the text
+                          paddingVertical: 0,
+                        }}
+                        value={item?.OpeningKm}
                         keyboardType="numeric"
                         onChangeText={(text) =>
-                          handleInputChange(index, "OpeningKM", text)
+                          handleInputChange(index, "OpeningKm", text)
                         }
                         readOnly={isShowLogs}
                         editable={!isShowLogs}
                       />
                     </View>
-                    <View style={styles.cell}>
+                    <View style={styles.cellInput}>
                       <TextInput
-                        style={{ textAlign: "center" }}
-                        value={item.ClosingKM || item?.ClosingKm}
+                        style={{
+                          textAlign: "center",
+                          textAlignVertical: "center", // Vertically center the text
+                          paddingVertical: 0,
+                        }}
+                        value={item?.ClosingKm}
                         keyboardType="numeric"
                         onChangeText={(text) =>
-                          handleInputChange(index, "ClosingKM", text)
+                          handleInputChange(index, "ClosingKm", text)
                         }
                         readOnly={isShowLogs}
                         editable={!isShowLogs}
                       />
                     </View>
                     <Text style={[styles.cell, { backgroundColor: "#e1ebff" }]}>
-                      {item?.totalKm || item?.TotalKm}
+                      {item?.TotalKm}
                     </Text>
-                    <View style={styles.cell}>
+                    <View style={styles.cellInput}>
                       <TextInput
-                        style={{ textAlign: "center" }}
-                        value={item.DieselAmount || item?.Amount}
+                        style={{
+                          textAlign: "center",
+                          textAlignVertical: "center", // Vertically center the text
+                          paddingVertical: 0,
+                        }}
+                        value={item?.Amount}
                         keyboardType="numeric"
                         onChangeText={(text) =>
-                          handleInputChange(index, "DieselAmount", text)
+                          handleInputChange(index, "Amount", text)
                         }
                         readOnly={isShowLogs}
                         editable={!isShowLogs}
                       />
                     </View>
-                    <View style={styles.cell}>
+                    <View style={styles.cellInput}>
                       <TextInput
-                        style={{ textAlign: "center" }}
+                        style={{
+                          textAlign: "center",
+                          textAlignVertical: "center", // Vertically center the text
+                          paddingVertical: 0,
+                        }}
                         value={item.DieselRate}
                         keyboardType="numeric"
                         onChangeText={(text) =>
@@ -549,24 +524,32 @@ function VehicleLog() {
                         editable={!isShowLogs}
                       />
                     </View>
-                    <View style={styles.cell}>
+                    <View style={styles.cellInput}>
                       <TextInput
-                        style={{ textAlign: "center" }}
-                        value={item.dieselVolume || item?.DieselQTYLTR}
+                        style={{
+                          textAlign: "center",
+                          textAlignVertical: "center", // Vertically center the text
+                          paddingVertical: 0,
+                        }}
+                        value={item.DieselQTYLTR || item?.DieselQTYLTR}
                         keyboardType="numeric"
                         onChangeText={(text) =>
-                          handleInputChange(index, "dieselVolume", text)
+                          handleInputChange(index, "DieselQTYLTR", text)
                         }
                         readOnly={isShowLogs}
                         editable={!isShowLogs}
                       />
                     </View>
                     <Text style={[styles.cell, { backgroundColor: "#e1ebff" }]}>
-                      {item.avgKmPerLtr || item?.Average}
+                      {item.Average || item?.Average}
                     </Text>
-                    <View style={styles.cell}>
+                    <View style={styles.cellInput}>
                       <TextInput
-                        style={{ textAlign: "center" }}
+                        style={{
+                          textAlign: "center",
+                          textAlignVertical: "center", // Vertically center the text
+                          paddingVertical: 0,
+                        }}
                         value={item.Narration}
                         onChangeText={(text) =>
                           handleInputChange(index, "Narration", text)
@@ -588,17 +571,17 @@ function VehicleLog() {
                     <Text style={styles.cell}></Text>
                     <Text style={styles.cell}></Text>
                     <Text style={[styles.cell, { fontWeight: "bold" }]}>
-                      {totals.totalKm}
+                      {totals.TotalKm}
                     </Text>
                     <Text style={[styles.cell, { fontWeight: "bold" }]}>
-                      {totals.totalDieselAmount}
+                      {totals.totalDieselAmount?.toFixed(2)}
                     </Text>
                     <Text style={styles.cell}></Text>
                     <Text style={[styles.cell, { fontWeight: "bold" }]}>
-                      {totals.totalDieselVolume}
+                      {totals.totalDieselVolume?.toFixed(2)}
                     </Text>
                     <Text style={[styles.cell, { fontWeight: "bold" }]}>
-                      {totals.avgKmPerLtr}
+                      {totals.Average}
                     </Text>
                     <Text style={styles.cell}></Text>
                   </View>
@@ -611,23 +594,32 @@ function VehicleLog() {
                 btnText={"Submit"}
                 onPress={handleSubmit}
                 style={{
-                  backgroundColor: "green",
+                  backgroundColor: COLORS.secondary,
                   padding: 10,
                   borderRadius: 10,
                   marginTop: 20,
+                  borderWidth: 1,
+                  borderColor: COLORS.primary,
                 }}
+                btnTextColor={COLORS.primary}
               />
             ) : null}
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
+      <CustomAlert
+        visible={isShow}
+        message={alertMsg}
+        type={alertType}
+        setVisible={setIsShow}
+      />
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   inputControl: {
-    marginBottom: 16,
+    marginBottom: 5,
   },
   input: {
     height: 50,
@@ -688,14 +680,17 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  // cellInput: {
-  //   borderWidth: 1,
-  //   borderColor: "#ccc",
-  //   paddingHorizontal: 8,
-  //   width: 110,
-  //   height: 50,
-  //   textAlign: "center",
-  // },
+  cellInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    width: 110,
+    height: 50,
+    padding: 5,
+    fontSize: 14,
+    color: "#333",
+    justifyContent: "center",
+    alignItems: "center",
+  },
 
   headerText: {
     fontWeight: "bold",

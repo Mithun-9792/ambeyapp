@@ -21,6 +21,7 @@ import {
 import { SCREENS } from "../constants/route";
 import CustomAlert from "../components/CustomAlert";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { COLORS } from "../constants/colors";
 const screenHeight = Dimensions.get("window").height;
 function UserReport({ navigation }) {
   const [registrationId, setRegistrationId] = useState("");
@@ -290,6 +291,7 @@ function UserReport({ navigation }) {
           btnText={isSearched ? "Reset" : "Search"}
           style={[styles.btn, { marginTop: 5, marginBottom: 10 }]}
           onPress={isSearched ? handleReset : handleFilter}
+          btnTextColor={COLORS.primary}
         />
 
         <ScrollView horizontal>
@@ -375,10 +377,12 @@ const styles = StyleSheet.create({
     borderStyle: "solid",
   },
   btn: {
-    backgroundColor: "orange",
+    backgroundColor: COLORS.secondary,
     paddingVertical: 12,
     // paddingHorizontal: 15,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
 
   pickerContainer: {
@@ -430,10 +434,12 @@ const styles = StyleSheet.create({
   },
 
   tableBtn: {
-    backgroundColor: "orange",
+    backgroundColor: COLORS.secondary,
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
 });
 

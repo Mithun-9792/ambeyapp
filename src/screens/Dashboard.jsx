@@ -12,9 +12,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SCREENS } from "../constants/route";
 import ActionButton from "../components/ActionButton"; // Import your new component
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { COLORS } from "../constants/colors";
+import ConfirmModal from "../components/ConfirmModal";
 function Dashboard({ navigation }) {
   const [time, setTime] = useState("");
   const [userName, setUserName] = useState("");
+  const [modalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     const updateTime = () => {
@@ -77,7 +80,7 @@ function Dashboard({ navigation }) {
         >
           {time}
         </Text> */}
-        <TouchableOpacity onPress={() => handleLogout()}>
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
           <FontAwesome
             name="power-off"
             size={24}
@@ -141,13 +144,20 @@ function Dashboard({ navigation }) {
           }
         />
         <ActionButton
-          title="Show Vehicle Logs"
+          title="Show Vehicle Reports"
           ImageName="file-text-o"
           onPress={() =>
             navigation.push(SCREENS.VEHICLELOG, { isShowLogs: true })
           }
         />
       </View>
+      <ConfirmModal
+        modalText={"Are you sure you want to logout?"}
+        modalVisible={modalVisible}
+        setModalVisible={() => setModalVisible(false)}
+        onConfirm={() => handleLogout()}
+        onCancel={() => setModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }
@@ -156,7 +166,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    marginTop: 40,
+    paddingTop: 10,
   },
   header: {
     flexDirection: "row",
@@ -169,7 +179,7 @@ const styles = StyleSheet.create({
     width: 50,
     borderRadius: 50,
     borderWidth: 2,
-    borderColor: "orange",
+    borderColor: COLORS.primary,
   },
   page: {
     borderRadius: 10,
@@ -179,7 +189,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     margin: 10,
-    borderColor: "orange",
+    borderColor: COLORS.primary,
     shadowColor: "#000",
   },
   sliderImage: {
@@ -198,6 +208,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginHorizontal: 20,
     flexWrap: "wrap",
+    gap: 10,
   },
 });
 

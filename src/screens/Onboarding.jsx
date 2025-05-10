@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LottieView from "lottie-react-native";
 import { SCREENS } from "../constants/route";
+import { COLORS } from "../constants/colors";
 
 export default function OnboardingScreen({ navigation }) {
   const animation = useRef(null);
@@ -17,7 +18,7 @@ export default function OnboardingScreen({ navigation }) {
       console.error("Error retrieving user data", error);
     }
   };
-  getUserData()
+  getUserData();
   const handleGetStarted = async () => {
     await AsyncStorage.setItem("@viewedOnboarding", "true");
     navigation.replace("Login");
@@ -56,12 +57,14 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: "bold", marginVertical: 20 },
   subtitle: { fontSize: 16, color: "#555", marginBottom: 40 },
   button: {
-    backgroundColor: "#4CAF50",
+    backgroundColor: COLORS.secondary,
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 30,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
-  buttonText: { color: "#fff", fontSize: 18, fontWeight: "600" },
+  buttonText: { color: COLORS.primary, fontSize: 18, fontWeight: "600" },
   textContainer: {
     alignItems: "center",
     marginVertical: 20,

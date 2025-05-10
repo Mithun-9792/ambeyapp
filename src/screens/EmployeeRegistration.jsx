@@ -35,6 +35,7 @@ import { useRoute } from "@react-navigation/native";
 import CustomAlert from "../components/CustomAlert";
 import Checkbox from "expo-checkbox";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { COLORS } from "../constants/colors";
 
 const schema = yup.object().shape({
   DateofJoining: yup.date().required("Date of Joining is required"),
@@ -61,6 +62,7 @@ const schema = yup.object().shape({
 function EmployeeRegistration() {
   const route = useRoute();
   const { isNew, employeeData } = route.params;
+  console.log(employeeData, "employee data");
   const eighteenYearsAgo = new Date();
   eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
   const {
@@ -224,7 +226,7 @@ function EmployeeRegistration() {
       const jsonValue = await AsyncStorage.getItem("userData");
       if (jsonValue != null) {
         const userData = JSON.parse(jsonValue);
-        setValue("MemberId", isNew ? "-1" : userData.MemberId);
+        setValue("MemberId", isNew ? "-1" : employeeData.MemberID);
         setValue("UserId", userData.UserId || "");
         setValue("UserToken", userData.UserToken || "");
         setValue("IP", "130.202.522.0255");
@@ -910,13 +912,15 @@ function EmployeeRegistration() {
             >
               <CustomButton
                 btnText={"Reset"}
-                style={[styles.btn, { backgroundColor: "red" }]}
+                style={[styles.btn, { backgroundColor: COLORS.secondary }]}
                 onPress={() => reset()}
+                btnTextColor={COLORS.primary}
               />
               <CustomButton
                 btnText={"Submit"}
-                style={[styles.btn, { backgroundColor: "green" }]}
+                style={[styles.btn, { backgroundColor: COLORS.secondary }]}
                 onPress={handleSubmit(onSubmit)}
+                btnTextColor={COLORS.primary}
               />
             </View>
             <MyModal
@@ -1048,10 +1052,11 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   btn: {
-    // backgroundColor: "orange",
     paddingVertical: 12,
     paddingHorizontal: 40,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
 });
 export default EmployeeRegistration;

@@ -668,7 +668,6 @@ const EmployeeRegister = () => {
           </View>
         </View>
 
-
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Nominee Name</Text>
           <Controller
@@ -730,7 +729,6 @@ const EmployeeRegister = () => {
             name="NomineeAdharNo"
           />
         </View>
-
 
         <View style={styles.inputControl}>
           <Text style={styles.inputLabel}>Residential Address</Text>

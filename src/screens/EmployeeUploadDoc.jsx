@@ -30,6 +30,7 @@ import { Dimensions } from "react-native";
 import { SafeAreaView } from "react-native";
 import MyModal from "../components/CenterViewModal";
 import { useRoute } from "@react-navigation/native";
+import { COLORS } from "../constants/colors";
 
 const screenHeight = Dimensions.get("window").height;
 
@@ -107,9 +108,12 @@ function EmployeeUploadDoc() {
     }
   }, []);
 
-  const handleGetDoc = () => {
+  const handleGetDoc = (registrationCode = "") => {
     const formData = new FormData();
-    formData.append("RegisCode", registrationId);
+    formData.append(
+      "RegisCode",
+      registrationCode.length > 0 ? registrationCode : registrationId
+    );
     formData.append("MemberId", "-1");
     formData.append("DocTypeId", "-1");
     formData.append("UserToken", userData?.UserToken);
@@ -120,7 +124,7 @@ function EmployeeUploadDoc() {
 
     getEmpDoc(formData)
       .then((res) => {
-        console.log("doc", res.data?.result);
+        // console.log("doc", res.data?.result);
         setUserDocs(res.data?.result);
       })
       .catch((err) => {
@@ -147,7 +151,7 @@ function EmployeeUploadDoc() {
     formData.append("M33_LocationId", "-1");
     formData.append("StaffTypeCode", "");
     formData.append("UserToken", userData?.UserToken || "");
-    formData.append("UserId", userData.UserId || "");
+    formData.append("UserId", userData.UserId || 15);
     formData.append("IP", "");
     formData.append("MAC", "");
     formData.append("DocTypeId", "-1");
@@ -155,10 +159,13 @@ function EmployeeUploadDoc() {
 
     getEmployeeDetail(formData)
       .then((res) => {
-        // console.log("Employee Details:", res.data);
+        console.log("Employee Details:", res.data.result[0]?.RegistrationCode);
         if (res.data.ResponseStatus == 1) {
           setEmployeeData(res.data.result);
+          handleGetDoc(res.data.result[0]?.RegistrationCode);
+          console.log(res.data.ResponseMessage, "success");
         } else {
+          console.log(res.data.ResponseMessage, "error");
           setAlertType("info");
           setAlertMsg(res.data.ResponseMessage);
           setIsShow(true);
@@ -167,7 +174,6 @@ function EmployeeUploadDoc() {
       .catch((err) => {
         console.log("Error fetching employee details:", err);
       });
-    handleGetDoc();
   }
 
   const handleReset = () => {
@@ -265,8 +271,10 @@ function EmployeeUploadDoc() {
   };
   const renderItem = ({ item }) => (
     <View style={styles.Tablerow}>
-      <Text style={styles.cell}>{item.RegistrationCode}</Text>
-      <Text style={styles.cell}>{item.Name}</Text>
+      <Text style={[styles.cell, styles.nameCell]}>
+        {item.RegistrationCode}
+      </Text>
+      <Text style={[styles.cell, styles.nameCell]}>{item.Name}</Text>
       <Text style={styles.cell}>{item.MobileNo}</Text>
       {/* <TouchableOpacity style={[styles.button, { backgroundColor: "green" }]}>
         <Text style={styles.buttonText}>Edit</Text>
@@ -572,10 +580,12 @@ const styles = StyleSheet.create({
     borderStyle: "solid",
   },
   btn: {
-    backgroundColor: "orange",
+    backgroundColor: COLORS.secondary,
     paddingVertical: 12,
     paddingHorizontal: 15,
     borderRadius: 8,
+    borderWidth: 1,
+    borderColor: COLORS.primary,
   },
   Tablerow: {
     flexDirection: "row",
@@ -589,6 +599,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
     color: "#333",
     textAlign: "center",
+  },
+  nameCell: {
+    maxWidth: 140,
+    overflow: "hidden",
   },
   headerCell: {
     fontWeight: "bold",

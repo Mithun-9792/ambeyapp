@@ -30,11 +30,11 @@ export default function Routes() {
         options={{ headerShown: false }}
         component={Dashboard}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name={SCREENS.EMPLOYEEREGISTER}
         options={{ headerShown: true, title: "Employee Register" }}
         component={EmployeeRegister}
-      />
+      /> */}
       <Stack.Screen
         name={SCREENS.EMPLOYEEREGISTRATION}
         options={{ headerShown: true, title: "Employee Register" }}

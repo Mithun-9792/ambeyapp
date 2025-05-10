@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { loginService } from "../services/auth.services";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { COLORS } from "../constants/colors";
 export default function Example({ navigation }) {
   const [form, setForm] = useState({
     UserId: "",
@@ -176,15 +177,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 8,
     padding: 30,
-    // paddingHorizontal: 16,
     borderWidth: 1,
-    backgroundColor: "orange",
-    borderColor: "orange",
+    backgroundColor: COLORS.secondary,
+    borderColor: COLORS.primary,
   },
   btnText: {
     fontSize: 17,
     lineHeight: 24,
     fontWeight: "600",
-    color: "#fff",
+    color: COLORS.primary,
   },
 });
