@@ -10,5 +10,6 @@ export const SCREENS = {
   EMPLOYEEREGISTRATION: "EmployeeRegistrarion",
   USERREPORT: "UserReport",
   VEHICLELOG: "VehicleLog",
+  MARKATTENDENCE: "MarkAttendence",
   // Add more screens here
 };

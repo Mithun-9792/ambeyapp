@@ -9,6 +9,7 @@ import EmployeeRegistration from "./screens/EmployeeRegistration";
 import EmployeeRegister from "./screens/EmployeeRegister";
 import UserReport from "./screens/UserReport";
 import VehicleLog from "./screens/VehicleLog";
+import MarkAttendence from "./screens/MarkAttendence";
 
 const Stack = createNativeStackNavigator();
 
@@ -54,6 +55,11 @@ export default function Routes() {
         name={SCREENS.VEHICLELOG}
         options={{ headerShown: true, title: "Vehicle Log" }}
         component={VehicleLog}
+      />
+      <Stack.Screen
+        name={SCREENS.MARKATTENDENCE}
+        options={{ headerShown: true, title: "Mark Attendence" }}
+        component={MarkAttendence}
       />
     </Stack.Navigator>
   );

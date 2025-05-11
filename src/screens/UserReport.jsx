@@ -379,7 +379,6 @@ const styles = StyleSheet.create({
   btn: {
     backgroundColor: COLORS.secondary,
     paddingVertical: 12,
-    // paddingHorizontal: 15,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: COLORS.primary,

@@ -17,8 +17,8 @@ const CustomButton = ({ btnText, onPress, style, btnTextColor }) => {
 const styles = StyleSheet.create({
   button: {
     // width: "100%",
-    maxHeight: 50,
     // backgroundColor: "#007BFF",
+    maxHeight: 50,
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 8,

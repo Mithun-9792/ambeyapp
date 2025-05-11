@@ -150,6 +150,11 @@ function Dashboard({ navigation }) {
             navigation.push(SCREENS.VEHICLELOG, { isShowLogs: true })
           }
         />
+        <ActionButton
+          title="Mark Attendence"
+          ImageName="users"
+          onPress={() => navigation.push(SCREENS.MARKATTENDENCE)}
+        />
       </View>
       <ConfirmModal
         modalText={"Are you sure you want to logout?"}
