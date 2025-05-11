@@ -14,6 +14,10 @@ import { COLORS } from "../constants/colors";
 import CustomButton from "../components/CustomButton";
 import { TouchableOpacity } from "react-native";
 import { size } from "lodash";
+import useToaster from "../hooks/useToaster";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { TouchableWithoutFeedback } from "react-native";
+import { Keyboard } from "react-native";
 
 const attendanceData = [
   {
@@ -124,6 +128,7 @@ const attendanceData = [
 ];
 
 const MarkAttendence = () => {
+  const { showAlert, AlertView } = useToaster();
   const [data, setData] = useState(
     attendanceData.map((item) => ({
       ...item,
@@ -206,7 +211,7 @@ const MarkAttendence = () => {
         >
           <TouchableOpacity
             style={[styles.btn]}
-            onPress={() => console.log("Saved:", item)}
+            onPress={() => showAlert("Attendance Updated", "success")}
           >
             <Text style={{ color: COLORS.primary }}>Save</Text>
           </TouchableOpacity>
@@ -216,30 +221,48 @@ const MarkAttendence = () => {
   );
 
   return (
-    <ScrollView>
-      <ScrollView horizontal>
-        <View>
-          <View style={styles.header}>
-            <Text style={[styles.headerCell, styles.cell]}>Sr.No</Text>
-            <Text style={[styles.headerCell, styles.cell]}>Reg Code</Text>
-            <Text style={[styles.headerCell, styles.cell]}>Name</Text>
-            <Text style={[styles.headerCell, styles.cell]}>Mobile</Text>
-            <Text style={[styles.headerCell, styles.cell]}>Designation</Text>
-            <Text style={[styles.headerCell, styles.cell]}>Status</Text>
-            <Text style={[styles.headerCell, styles.cell, { width: 150 }]}>
-              Leave Type
-            </Text>
-            <Text style={[styles.headerCell, styles.cell]}>Remark</Text>
-            <Text style={[styles.headerCell, styles.cell]}>Action</Text>
-          </View>
-          <FlatList
-            data={data}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-          />
-        </View>
-      </ScrollView>
-    </ScrollView>
+    <View style={{ flex: 1 }}>
+      <KeyboardAwareScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          flexGrow: 1,
+        }}
+        extraScrollHeight={80}
+        enableOnAndroid={true}
+      >
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <ScrollView>
+            <ScrollView horizontal>
+              <View>
+                <View style={styles.header}>
+                  <Text style={[styles.headerCell, styles.cell]}>Sr.No</Text>
+                  <Text style={[styles.headerCell, styles.cell]}>Reg Code</Text>
+                  <Text style={[styles.headerCell, styles.cell]}>Name</Text>
+                  <Text style={[styles.headerCell, styles.cell]}>Mobile</Text>
+                  <Text style={[styles.headerCell, styles.cell]}>
+                    Designation
+                  </Text>
+                  <Text style={[styles.headerCell, styles.cell]}>Status</Text>
+                  <Text
+                    style={[styles.headerCell, styles.cell, { width: 150 }]}
+                  >
+                    Leave Type
+                  </Text>
+                  <Text style={[styles.headerCell, styles.cell]}>Remark</Text>
+                  <Text style={[styles.headerCell, styles.cell]}>Action</Text>
+                </View>
+                <FlatList
+                  data={data}
+                  renderItem={renderItem}
+                  keyExtractor={(item) => item.id}
+                />
+              </View>
+            </ScrollView>
+          </ScrollView>
+        </TouchableWithoutFeedback>
+      </KeyboardAwareScrollView>
+      <AlertView />
+    </View>
   );
 };
 

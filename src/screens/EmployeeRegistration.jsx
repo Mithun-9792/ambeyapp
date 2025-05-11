@@ -36,6 +36,7 @@ import CustomAlert from "../components/CustomAlert";
 import Checkbox from "expo-checkbox";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { COLORS } from "../constants/colors";
+import useToaster from "../hooks/useToaster";
 
 const schema = yup.object().shape({
   DateofJoining: yup.date().required("Date of Joining is required"),
@@ -60,6 +61,7 @@ const schema = yup.object().shape({
 });
 
 function EmployeeRegistration() {
+  const { showAlert, AlertView } = useToaster();
   const route = useRoute();
   const { isNew, employeeData } = route.params;
   console.log(employeeData, "employee data");
@@ -100,6 +102,13 @@ function EmployeeRegistration() {
   const [alertType, setAlertType] = useState("");
   const [alertMsg, setAlertMsg] = useState("");
   const [isSameAddress, setIsSameAddress] = useState(false);
+
+  useEffect(() => {
+    const firstErrorKey = Object.keys(errors)[0];
+    if (firstErrorKey && errors[firstErrorKey]?.message) {
+      showAlert(errors[firstErrorKey].message, "error");
+    }
+  }, [errors]);
 
   function dateFormat(date) {
     const [day, month, year] = date.split("/");
@@ -938,6 +947,7 @@ function EmployeeRegistration() {
         type={alertType}
         setVisible={setIsShow}
       />
+      <AlertView />
     </>
   );
 }
