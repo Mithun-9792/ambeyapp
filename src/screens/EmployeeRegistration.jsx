@@ -136,6 +136,11 @@ function EmployeeRegistration() {
       setValue("Pincode", employeeData.Pincode || "");
       setValue("StateId", employeeData.StateId || "");
       setValue("CityId", employeeData.CityId || "");
+      setValue("PermanentAddress", employeeData.PermanentAddress || "");
+      setValue("Pincode", employeeData.Pincode || "");
+      setValue("NomineeName", employeeData.NomineeName || "");
+      setValue("NomineeAdharNo", employeeData.NomineeAdharNo || "");
+      setValue("NomineeRelation", employeeData.NomineeRelation || "");
     }
   }, [employeeData]);
 
@@ -154,6 +159,10 @@ function EmployeeRegistration() {
     formdata.append("MAC", "");
     formdata.append("UserId", "");
     formdata.append("GeoLocation", "");
+    formdata.append("NomineeName", "");
+    formdata.append("NomineeAdharNo", "");
+    formdata.append("NomineeRelation", "");
+
 
     getDesignationService(formdata)
       .then((res) => {
@@ -299,6 +308,11 @@ function EmployeeRegistration() {
         formData.append(key, value.toString());
       }
     });
+    console.log(formData , "formdata");
+
+
+
+
     registerService(formData)
       .then((res) => {
         console.log(res.data);
@@ -336,7 +350,9 @@ function EmployeeRegistration() {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={{ padding: 30 }}>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Title</Text>
+              <Text style={styles.inputLabel}>
+                Title <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.pickerContainer}>
                 <Controller
                   control={control}
@@ -368,7 +384,9 @@ function EmployeeRegistration() {
               )}
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Full Name</Text>
+              <Text style={styles.inputLabel}>
+                Full Name <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -387,7 +405,9 @@ function EmployeeRegistration() {
               )}
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Gender</Text>
+              <Text style={styles.inputLabel}>
+                Gender <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.pickerContainer}>
                 <Controller
                   control={control}
@@ -411,7 +431,9 @@ function EmployeeRegistration() {
               )}
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Mobile No</Text>
+              <Text style={styles.inputLabel}>
+                Mobile No <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -419,6 +441,7 @@ function EmployeeRegistration() {
                     style={styles.input}
                     placeholder="Enter Mobile No"
                     onBlur={onBlur}
+                    keyboardType="numeric"
                     onChangeText={onChange}
                     value={value}
                   />
@@ -468,7 +491,9 @@ function EmployeeRegistration() {
               )}
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Father/Husband Name</Text>
+              <Text style={styles.inputLabel}>
+                Father/Husband Name <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -489,7 +514,9 @@ function EmployeeRegistration() {
               )}
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Application Date</Text>
+              <Text style={styles.inputLabel}>
+                Application Date <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 name="DateofJoining"
@@ -525,12 +552,15 @@ function EmployeeRegistration() {
               )}
             </View>
             <View style={styles.inputControl}>
-              <Text style={[styles.inputLabel, { marginBottom: 0 }]}>
-                Date of Birth
+              <Text style={[styles.inputLabel, { marginBottom: 10 }]}>
+                Date of Birth{" "}
+                <Text
+                  style={{ color: "red", fontSize: 12, marginHorizontal: 5 }}
+                >
+                  *Should be 18 years old
+                </Text>
               </Text>
-              <Text style={{ color: "red", fontSize: 12, marginHorizontal: 5 }}>
-                *Should be 18 years old
-              </Text>
+
               <Controller
                 control={control}
                 name="Dateofbirth"
@@ -566,7 +596,10 @@ function EmployeeRegistration() {
               )}
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Designation</Text>
+              <Text style={styles.inputLabel}>
+                {" "}
+                Designation <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.pickerContainer}>
                 <Controller
                   control={control}
@@ -598,7 +631,9 @@ function EmployeeRegistration() {
               )}
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Select Location</Text>
+              <Text style={styles.inputLabel}>
+                Select Location <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.pickerContainer}>
                 <Controller
                   control={control}
@@ -631,7 +666,9 @@ function EmployeeRegistration() {
               )}
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Select Staff</Text>
+              <Text style={styles.inputLabel}>
+                Select Staff <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.pickerContainer}>
                 <Controller
                   control={control}
@@ -656,7 +693,9 @@ function EmployeeRegistration() {
               )}
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Select Department ID</Text>
+              <Text style={styles.inputLabel}>
+                Select Department ID <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.pickerContainer}>
                 <Controller
                   control={control}
@@ -688,7 +727,9 @@ function EmployeeRegistration() {
               )}
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Residential Address</Text>
+              <Text style={styles.inputLabel}>
+                Residential Address <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -752,7 +793,9 @@ function EmployeeRegistration() {
               />
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Pin Code</Text>
+              <Text style={styles.inputLabel}>
+                Pin Code <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <Controller
                 control={control}
                 render={({ field: { onChange, onBlur, value } }) => (
@@ -768,7 +811,9 @@ function EmployeeRegistration() {
               />
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Select State</Text>
+              <Text style={styles.inputLabel}>
+                Select State <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.pickerContainer}>
                 <Controller
                   control={control}
@@ -797,7 +842,9 @@ function EmployeeRegistration() {
               </View>
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Select City</Text>
+              <Text style={styles.inputLabel}>
+                Select City <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.pickerContainer}>
                 <Controller
                   control={control}
@@ -826,7 +873,7 @@ function EmployeeRegistration() {
               </View>
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Profile Image</Text>
+              <Text style={styles.inputLabel}>Profile Image <Text style={{ color: "red" }}>*</Text></Text>
               <View style={styles.imagePickerContainer}>
                 <TouchableOpacity onPress={() => setShowModal(true)}>
                   <View

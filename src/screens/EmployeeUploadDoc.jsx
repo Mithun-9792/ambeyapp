@@ -268,6 +268,8 @@ function EmployeeUploadDoc() {
       .catch((err) => {
         console.error("Error uploading document:", err);
       });
+
+    handleGetDoc();
   };
   const renderItem = ({ item }) => (
     <View style={styles.Tablerow}>
@@ -284,6 +286,9 @@ function EmployeeUploadDoc() {
       </TouchableOpacity> */}
     </View>
   );
+  useEffect(() => {
+    handleGetDoc();
+  }, [alertMsg]);
 
   return (
     <SafeAreaView>
@@ -495,6 +500,7 @@ function EmployeeUploadDoc() {
             </View>
           </>
         )}
+        {console.log(userDocs, "userDocs")}
         {userDocs.length > 0 && (
           <View>
             <Text
