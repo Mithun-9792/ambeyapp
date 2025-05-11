@@ -39,15 +39,16 @@ import { COLORS } from "../constants/colors";
 import useToaster from "../hooks/useToaster";
 
 const schema = yup.object().shape({
-  DateofJoining: yup.date().required("Date of Joining is required"),
+  DateofJoining: yup.date().required("Date of Application is required"),
   Dateofbirth: yup.date().required("Date of Birth is required"),
   RegistrationCode: yup.string(),
   TitleId: yup.number().required("Please Select title"),
   FullName: yup.string().required("Please enter you full name"),
-  EMail: yup.string().email("Please enter a valid email address"),
-  // .required("Please enter your email"),
+  Gender: yup.string().required("Please select gender"),
   MobileNo: yup.number().required("Please enter mobile number"),
-  AlternateMob: yup.number(),
+  EMail: yup.string().email("Please enter a valid email address").default(""),
+  // .required("Please enter your email"),
+  AlternateMob: yup.number().default(0),
   FatherHusbandName: yup
     .string()
     .required("Father or husband name is required"),
@@ -55,16 +56,25 @@ const schema = yup.object().shape({
   LocationId: yup.number().required("Please select location"),
   StaffTypeCode: yup.string().required("Please select type"),
   DepartmentId: yup.number().required("Please select department"),
-  Gender: yup.string().required("Please select gender"),
-  Address: yup.string(),
-  PermanentAddress: yup.string(),
+  Address: yup.string().required("Please enter residential address"),
+  PermanentAddress: yup.string().default(""),
+  Pincode: yup
+    .string()
+    .required("Please enter pin code")
+    .matches(/^\d{6}$/, "Pin code must be exactly 6 digits"),
+  StateId: yup.number().required("Please select state"),
+  CityId: yup.number().required("Please select city"),
+  imgUser: yup.string().required("Please select image"),
+  NomineeName: yup.string().default(""),
+  NomineeAdharNo: yup.string().default(""),
+  NomineeRelation: yup.string().default(""),
 });
 
 function EmployeeRegistration() {
   const { showAlert, AlertView } = useToaster();
   const route = useRoute();
   const { isNew, employeeData } = route.params;
-  console.log(employeeData, "employee data");
+  // console.log(employeeData, "employee data");
   const eighteenYearsAgo = new Date();
   eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
   const {
@@ -162,7 +172,6 @@ function EmployeeRegistration() {
     formdata.append("NomineeName", "");
     formdata.append("NomineeAdharNo", "");
     formdata.append("NomineeRelation", "");
-
 
     getDesignationService(formdata)
       .then((res) => {
@@ -272,6 +281,7 @@ function EmployeeRegistration() {
       setShowModal(result.canceled);
       setPicPreview(result.assets[0].uri);
       setProfileImage(result.assets[0].base64);
+      setValue("imgUser", result.assets[0].base64);
     } else {
       setShowModal(false);
     }
@@ -290,6 +300,8 @@ function EmployeeRegistration() {
       setShowModal(result.canceled);
       setPicPreview(result.assets[0].uri);
       setProfileImage(result.assets[0].base64);
+      // console.log(result.assets[0].base64.slice(0, 10), "base64");
+      setValue("imgUser", result.assets[0].base64);
     } else {
       setShowModal(false);
     }
@@ -302,16 +314,13 @@ function EmployeeRegistration() {
     Object.entries(data).forEach(([key, value]) => {
       if (value === undefined || value === null) return;
       if (key === "DateofJoining" || key === "Dateofbirth") {
-        console.log(value, "Date");
+        console.log(value.toLocaleDateString("en-GB"), "Date");
         formData.append(key, value.toLocaleDateString("en-GB"));
       } else {
         formData.append(key, value.toString());
       }
     });
-    console.log(formData , "formdata");
-
-
-
+    // console.log(formData, "formdata");
 
     registerService(formData)
       .then((res) => {
@@ -873,7 +882,9 @@ function EmployeeRegistration() {
               </View>
             </View>
             <View style={styles.inputControl}>
-              <Text style={styles.inputLabel}>Profile Image <Text style={{ color: "red" }}>*</Text></Text>
+              <Text style={styles.inputLabel}>
+                Profile Image <Text style={{ color: "red" }}>*</Text>
+              </Text>
               <View style={styles.imagePickerContainer}>
                 <TouchableOpacity onPress={() => setShowModal(true)}>
                   <View
