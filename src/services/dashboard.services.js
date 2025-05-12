@@ -52,3 +52,35 @@ export const getVehicleRunningMonthlyLogReport = async (data) => {
     }
   );
 };
+
+export const getUserListService = async (data) => {
+  return await axios.post(API_ROUTES.GET_USER_LIST_API, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+export const getLeaveTypeListService = async (data) => {
+  return await axios.post(API_ROUTES.GET_LEAVE_TYPE_API, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+export const lockAttendenceService = async (data) => {
+  return await axios.post(API_ROUTES.LOCK_ATTENDENCE_API, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+export const getAttendenceReportService = async (data) => {
+  return await axios.post(API_ROUTES.ATTENDENCE_REPORT_API, data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};

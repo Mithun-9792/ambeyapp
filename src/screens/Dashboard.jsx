@@ -155,6 +155,11 @@ function Dashboard({ navigation }) {
           ImageName="users"
           onPress={() => navigation.push(SCREENS.MARKATTENDENCE)}
         />
+        <ActionButton
+          title="Attendence"
+          ImageName="calendar"
+          onPress={() => navigation.push(SCREENS.ATTENDECEREPORT)}
+        />
       </View>
       <ConfirmModal
         modalText={"Are you sure you want to logout?"}
@@ -172,7 +177,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     paddingTop: 10,
-    marginTop:20
+    // marginTop: 20,
   },
   header: {
     flexDirection: "row",

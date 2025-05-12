@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Text,
   View,
@@ -7,136 +7,86 @@ import {
   StyleSheet,
   TextInput,
   ScrollView,
+  ActivityIndicator,
 } from "react-native";
 import RadioButtonGroup, { RadioButtonItem } from "expo-radio-button";
 import { Picker } from "@react-native-picker/picker";
 import { COLORS } from "../constants/colors";
-import CustomButton from "../components/CustomButton";
 import { TouchableOpacity } from "react-native";
-import { size } from "lodash";
 import useToaster from "../hooks/useToaster";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { TouchableWithoutFeedback } from "react-native";
 import { Keyboard } from "react-native";
-
-const attendanceData = [
-  {
-    id: "1",
-    code: "TEMP2828",
-    name: "Dinesh",
-    mobile: "9792518649",
-    designation: "R.M",
-  },
-  {
-    id: "2",
-    code: "TEMP2829",
-    name: "Dileep",
-    mobile: "2211334455",
-    designation: "Loader",
-  },
-  {
-    id: "3",
-    code: "TEMP2830",
-    name: "Rahul",
-    mobile: "8899889999",
-    designation: "Driver",
-  },
-  {
-    id: "4",
-    code: "TEMP2831",
-    name: "Virat",
-    mobile: "1122334433",
-    designation: "Driver",
-  },
-  {
-    id: "5",
-    code: "TEMP2832",
-    name: "Mithun Pal",
-    mobile: "8896748255",
-    designation: "Driver",
-  },
-  {
-    id: "6",
-    code: "TEMP2834",
-    name: "Yogendra",
-    mobile: "333355553333",
-    designation: "Gun Man",
-  },
-  {
-    id: "7",
-    code: "TEMP2835",
-    name: "Test New User",
-    mobile: "8899009009",
-    designation: "Account Manager",
-  },
-  {
-    id: "8",
-    code: "TEMP2836",
-    name: "New User",
-    mobile: "9988889990",
-    designation: "Gun Man",
-  },
-  {
-    id: "9",
-    code: "TEMP2837",
-    name: "New User",
-    mobile: "9988889990",
-    designation: "Mentainer",
-  },
-  {
-    id: "10",
-    code: "TEMP2838",
-    name: "New User",
-    mobile: "9988889990",
-    designation: "Mentainer",
-  },
-  {
-    id: "11",
-    code: "TEMP2839",
-    name: "New User",
-    mobile: "9988889990",
-    designation: "Mentainer",
-  },
-  {
-    id: "12",
-    code: "TEMP2840",
-    name: "New User",
-    mobile: "9988889990",
-    designation: "Mentainer",
-  },
-  {
-    id: "13",
-    code: "TEMP2841",
-    name: "New User",
-    mobile: "9988889990",
-    designation: "Mentainer",
-  },
-  {
-    id: "14",
-    code: "TEMP2842",
-    name: "New User",
-    mobile: "9988889990",
-    designation: "Mentainer",
-  },
-  {
-    id: "15",
-    code: "TEMP2843",
-    name: "New User",
-    mobile: "9988889990",
-    designation: "Mentainer",
-  },
-];
+import {
+  getLeaveTypeListService,
+  getUserListService,
+  lockAttendenceService,
+} from "../services/dashboard.services";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const MarkAttendence = () => {
   const { showAlert, AlertView } = useToaster();
-  const [data, setData] = useState(
-    attendanceData.map((item) => ({
-      ...item,
-      status: "Present",
-      leaveType: "",
-      remark: "",
-    }))
-  );
+  const [userData, setUserData] = useState({});
+  const [data, setData] = useState();
+  const [leaveTypes, setLeaveTypes] = useState([]);
+  const [LeaveTypeName, setLeaveTypeName] = useState("");
+
+  const getUserData = async () => {
+    try {
+      const jsonValue = await AsyncStorage.getItem("userData");
+      if (jsonValue != null) {
+        const userData = JSON.parse(jsonValue);
+        setUserData(userData);
+        return userData;
+      }
+    } catch (error) {
+      console.error("Error retrieving user data", error);
+    }
+  };
+
+  const handleGetUserList = () => {
+    const formData = new FormData();
+    formData.append("RegCode", "");
+    formData.append("MobileNo", "");
+    formData.append("UserToken", userData?.UserToken || "");
+    formData.append("IP", "102.253.658.20");
+    formData.append("MAC", "MAC24323423");
+    formData.append("UserId", userData.UserId || 15);
+    formData.append("GeoLocation", "25.251452,36.25478");
+
+    getUserListService(formData)
+      .then((res) => {
+        // console.log(res.data);
+        setData(
+          res.data.result?.map((item) => ({
+            ...item,
+            IsPresent: "true",
+            leaveType: "",
+            remark: "",
+          }))
+        );
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+    getLevesType(formData);
+  };
+
+  const getLevesType = (formdata) => {
+    getLeaveTypeListService(formdata)
+      .then((res) => {
+        // console.log(res.data);
+        setLeaveTypes(res.data.result);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  useEffect(() => {
+    getUserData();
+    handleGetUserList();
+  }, []);
 
   const handleUpdate = (index, key, value) => {
     const newData = [...data];
@@ -144,14 +94,52 @@ const MarkAttendence = () => {
     setData(newData);
   };
 
+  const handleMarkAttendence = (attendeceData) => {
+    console.log(attendeceData);
+    const formData = new FormData();
+    formData.append(
+      "ListData",
+      JSON.stringify([
+        {
+          MemberId: attendeceData.MemberId,
+          Date: new Date().toLocaleDateString(),
+          IsPresent: attendeceData.IsPresent,
+          LeaveTypeId: attendeceData.leaveType,
+          LeaveTypeName: LeaveTypeName,
+          Remark: attendeceData.remark,
+        },
+      ])
+    );
+
+    formData.append("UserToken", userData?.UserToken || "");
+    formData.append("IP", "1025.125.2156.23");
+    formData.append("MAC", "56546DF345345");
+    formData.append("UserId", "15");
+    formData.append("GeoLocation", "12.26565,15.544564");
+    console.log(formData);
+    lockAttendenceService(formData)
+      .then((res) => {
+        console.log(res.data);
+        if (res.data.ResponseStatus == 1) {
+          showAlert(res.data?.ResponseMessage, "success");
+        } else {
+          showAlert(res.data?.ResponseMessage, "error");
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   const renderItem = ({ item, index }) => (
     <ScrollView horizontal>
       <View style={styles.row}>
         <Text style={styles.cell}>{index + 1}</Text>
-        <Text style={styles.cell}>{item.code}</Text>
-        <Text style={styles.cell}>{item.name}</Text>
-        <Text style={styles.cell}>{item.mobile}</Text>
-        <Text style={styles.cell}>{item.designation}</Text>
+        <Text style={styles.cell}>{item.RegistrationCode}</Text>
+        <Text style={styles.cell}>{item.Name}</Text>
+        {/* <Text style={styles.cell}>{item.mobile}</Text> */}
+        <Text style={styles.cell}>{item.Designation}</Text>
+        <Text style={styles.cell}>{new Date().toLocaleDateString()}</Text>
 
         <View style={styles.cell}>
           <RadioButtonGroup
@@ -161,14 +149,14 @@ const MarkAttendence = () => {
               alignItems: "center",
               gap: 5,
             }}
-            selected={item.status}
-            onSelected={(value) => handleUpdate(index, "status", value)}
+            selected={item.IsPresent}
+            onSelected={(value) => handleUpdate(index, "IsPresent", value)}
             radioBackground={COLORS.primary}
             size={18}
             radioStyle={{ borderRadius: "50%", size: 18 }}
           >
-            <RadioButtonItem value="Present" label="Present" />
-            <RadioButtonItem value="Absent" label="Absent" />
+            <RadioButtonItem value="true" label="Present" />
+            <RadioButtonItem value="false" label="Absent" />
           </RadioButtonGroup>
         </View>
         <View
@@ -179,15 +167,22 @@ const MarkAttendence = () => {
         >
           <Picker
             selectedValue={item.leaveType}
-            onValueChange={(value) => handleUpdate(index, "leaveType", value)}
+            onValueChange={(value) => {
+              handleUpdate(index, "leaveType", value?.LeaveTypeId);
+              setLeaveTypeName(value?.LeaveTypeName);
+            }}
             style={[styles.picker]}
             itemStyle={{ fontSize: 14 }}
             dropdownIconColor={COLORS.primary}
           >
             <Picker.Item label="Type" value="" />
-            <Picker.Item label="Sick Leave" value="Sick" />
-            <Picker.Item label="Casual Leave" value="Casual" />
-            <Picker.Item label="Paid Leave" value="Paid" />
+            {leaveTypes.map((item) => (
+              <Picker.Item
+                label={item?.LeaveTypeName}
+                value={item}
+                key={item.LeaveTypeId}
+              />
+            ))}
           </Picker>
         </View>
         <View
@@ -211,7 +206,13 @@ const MarkAttendence = () => {
         >
           <TouchableOpacity
             style={[styles.btn]}
-            onPress={() => showAlert("Attendance Updated", "success")}
+            onPress={() => {
+              if (item.IsPresent === "false" && !item.leaveType) {
+                showAlert("Please select a leave type.", "info");
+              } else {
+                handleMarkAttendence(item);
+              }
+            }}
           >
             <Text style={{ color: COLORS.primary }}>Save</Text>
           </TouchableOpacity>
@@ -233,15 +234,16 @@ const MarkAttendence = () => {
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView>
             <ScrollView horizontal>
-              <View>
+              <View style={{ flex: 1, padding: 30 }}>
                 <View style={styles.header}>
                   <Text style={[styles.headerCell, styles.cell]}>Sr.No</Text>
                   <Text style={[styles.headerCell, styles.cell]}>Reg Code</Text>
                   <Text style={[styles.headerCell, styles.cell]}>Name</Text>
-                  <Text style={[styles.headerCell, styles.cell]}>Mobile</Text>
+                  {/* <Text style={[styles.headerCell, styles.cell]}>Mobile</Text> */}
                   <Text style={[styles.headerCell, styles.cell]}>
                     Designation
                   </Text>
+                  <Text style={[styles.headerCell, styles.cell]}>Date</Text>
                   <Text style={[styles.headerCell, styles.cell]}>Status</Text>
                   <Text
                     style={[styles.headerCell, styles.cell, { width: 150 }]}
@@ -254,7 +256,23 @@ const MarkAttendence = () => {
                 <FlatList
                   data={data}
                   renderItem={renderItem}
-                  keyExtractor={(item) => item.id}
+                  keyExtractor={(item) => item.RegistrationCode}
+                  ListEmptyComponent={
+                    !data ? (
+                      <View style={styles.loaderContainer}>
+                        <ActivityIndicator
+                          color={COLORS.primary}
+                          size={"large"}
+                        />
+                      </View>
+                    ) : (
+                      <View style={styles.loaderContainer}>
+                        <Text style={{ color: COLORS.primary }}>
+                          No Data Found
+                        </Text>
+                      </View>
+                    )
+                  }
                 />
               </View>
             </ScrollView>
@@ -315,6 +333,11 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderWidth: 1,
     borderColor: COLORS.primary,
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

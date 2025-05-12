@@ -20,6 +20,10 @@ const API_ROUTES = {
   GET_VEHICLE_NUMBER_API: `${BASS_URL}/APIServices/GetVehicleNumbers.aspx`,
   ADD_MONTHLY_LOG_API: `${BASS_URL}/APIServices/SaveVehicleRunningMonthlyLog.aspx`,
   GET_VEHICLE_RUNNING_MONTHLY_LOG_REPORT: `${BASS_URL}/APIServices/VehicleRunningMonthlyLogReport.aspx`,
+  GET_USER_LIST_API: `${BASS_URL}/APIServices/GetEmployeeListForApp.aspx`,
+  GET_LEAVE_TYPE_API: `${BASS_URL}/APIServices/GetLeaveType.aspx`,
+  LOCK_ATTENDENCE_API: `${BASS_URL}/APIServices/LockEmployeeAttendence.aspx`,
+  ATTENDENCE_REPORT_API: `${BASS_URL}/APIServices/AttendanceReportForApp.aspx`,
 };
 
 export default API_ROUTES;

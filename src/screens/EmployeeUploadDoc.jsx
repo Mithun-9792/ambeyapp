@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Button,
   FlatList,
@@ -31,6 +32,7 @@ import { SafeAreaView } from "react-native";
 import MyModal from "../components/CenterViewModal";
 import { useRoute } from "@react-navigation/native";
 import { COLORS } from "../constants/colors";
+import useToaster from "../hooks/useToaster";
 
 const screenHeight = Dimensions.get("window").height;
 
@@ -42,6 +44,7 @@ const schema = yup.object().shape({
 });
 
 function EmployeeUploadDoc() {
+  const { showAlert, AlertView } = useToaster();
   const route = useRoute();
   const { userRegistrationId } = route.params;
   const [registrationId, setRegistrationId] = useState(
@@ -61,6 +64,7 @@ function EmployeeUploadDoc() {
   const [alertType, setAlertType] = useState("");
   const [alertMsg, setAlertMsg] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const {
     control,
@@ -108,12 +112,10 @@ function EmployeeUploadDoc() {
     }
   }, []);
 
-  const handleGetDoc = (registrationCode = "") => {
+  const handleGetDoc = () => {
     const formData = new FormData();
-    formData.append(
-      "RegisCode",
-      registrationCode.length > 0 ? registrationCode : registrationId
-    );
+    formData.append("RegisCode", registrationId);
+    formData.append("MemberMobileNo", mobileNo);
     formData.append("MemberId", "-1");
     formData.append("DocTypeId", "-1");
     formData.append("UserToken", userData?.UserToken);
@@ -124,7 +126,8 @@ function EmployeeUploadDoc() {
 
     getEmpDoc(formData)
       .then((res) => {
-        // console.log("doc", res.data?.result);
+        console.log("doc", res.data?.result);
+        // showAlert(res.data?.ResponseMessage, "info");
         setUserDocs(res.data?.result);
       })
       .catch((err) => {
@@ -159,17 +162,20 @@ function EmployeeUploadDoc() {
 
     getEmployeeDetail(formData)
       .then((res) => {
-        console.log("Employee Details:", res.data.result[0]?.RegistrationCode);
+        // console.log("Employee Details:", res.data.result[0]?.RegistrationCode);
         if (res.data.ResponseStatus == 1) {
           setEmployeeData(res.data.result);
-          handleGetDoc(res.data.result[0]?.RegistrationCode);
-          console.log(res.data.ResponseMessage, "success");
+
+          // console.log(res.data.ResponseMessage, "success");
         } else {
-          console.log(res.data.ResponseMessage, "error");
+          // console.log(res.data.ResponseMessage, "error");
           setAlertType("info");
           setAlertMsg(res.data.ResponseMessage);
           setIsShow(true);
         }
+      })
+      .then(() => {
+        handleGetDoc();
       })
       .catch((err) => {
         console.log("Error fetching employee details:", err);
@@ -228,7 +234,7 @@ function EmployeeUploadDoc() {
   };
 
   const onSubmit = (data) => {
-    console.log(data?.DocExpiryDate);
+    setIsLoading(true);
     const formData = new FormData();
     formData.append("M01_MemberID", employeeData[0]?.MemberID);
     formData.append("Regiscode", employeeData[0]?.RegistrationCode);
@@ -244,7 +250,7 @@ function EmployeeUploadDoc() {
 
     uploadEmpDocService(formData)
       .then((res) => {
-        // console.log("Upload response:", res.data);
+        console.log("Upload response:", res.data);
         if (res.data?.ResponseStatus == 1) {
           setAlertType("success");
           setAlertMsg(res?.data?.ResponseMessage);
@@ -258,18 +264,21 @@ function EmployeeUploadDoc() {
           setImgPreview("");
 
           // Refresh document list
-          handleGetDoc();
         } else {
           setAlertType("info");
           setAlertMsg(res?.data?.ResponseMessage);
           setIsShow(true);
         }
       })
+      .then(() => handleGetDoc())
       .catch((err) => {
         console.error("Error uploading document:", err);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
 
-    handleGetDoc();
+    // handleGetDoc();
   };
   const renderItem = ({ item }) => (
     <View style={styles.Tablerow}>
@@ -278,12 +287,6 @@ function EmployeeUploadDoc() {
       </Text>
       <Text style={[styles.cell, styles.nameCell]}>{item.Name}</Text>
       <Text style={styles.cell}>{item.MobileNo}</Text>
-      {/* <TouchableOpacity style={[styles.button, { backgroundColor: "green" }]}>
-        <Text style={styles.buttonText}>Edit</Text>
-      </TouchableOpacity>
-      <TouchableOpacity style={[styles.button, { backgroundColor: "#b43b3b" }]}>
-        <Text style={styles.buttonText}>View/Update</Text>
-      </TouchableOpacity> */}
     </View>
   );
   useEffect(() => {
@@ -493,14 +496,14 @@ function EmployeeUploadDoc() {
                 )}
               </View>
               <CustomButton
-                btnText="Upload Document"
-                style={[styles.btn]}
-                onPress={handleSubmit(onSubmit)}
+                btnText={isLoading ? "Uploading" : "Upload Document"}
+                style={isLoading ? styles.disabledBtn : styles.btn}
+                onPress={isLoading ? "" : handleSubmit(onSubmit)}
               />
             </View>
           </>
         )}
-        {console.log(userDocs, "userDocs")}
+
         {userDocs.length > 0 && (
           <View>
             <Text
@@ -541,6 +544,7 @@ function EmployeeUploadDoc() {
           </View>
         )}
       </ScrollView>
+      <AlertView />
       <CustomAlert
         visible={isShow}
         message={alertMsg}
@@ -559,13 +563,10 @@ function EmployeeUploadDoc() {
 
 const styles = StyleSheet.create({
   row: {
-    // flex: 1,
     flexDirection: "row",
-    // alignItems: "center",
     padding: 10,
     gap: 5,
     justifyContent: "space-between",
-    // paddingHorizontal: 20,
   },
   uploadSec: {
     flex: 1,
@@ -593,6 +594,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: COLORS.primary,
   },
+  disabledBtn: {
+    backgroundColor: "#ccc",
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#aaa",
+    opacity: 0.6,
+  },
+
   Tablerow: {
     flexDirection: "row",
     borderBottomWidth: 1,

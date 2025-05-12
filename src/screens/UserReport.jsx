@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   SafeAreaView,
@@ -37,7 +38,7 @@ function UserReport({ navigation }) {
   const [isShow, setIsShow] = useState(false);
   const [alertType, setAlertType] = useState("");
   const [alertMsg, setAlertMsg] = useState("");
-  const [employeeData, setEmployeeData] = useState([]);
+  const [employeeData, setEmployeeData] = useState();
   const [userData, setUserData] = useState({});
 
   const isAnyFieldFilled =
@@ -95,37 +96,22 @@ function UserReport({ navigation }) {
         console.log(err);
       });
     getUserData();
+    handleSearch();
   }, []);
 
-  const handleFilter = () => {
-    if (
-      registrationId.length === 0 &&
-      mobileNo.length === 0 &&
-      name.length === 0 &&
-      designation.length === 0 &&
-      department.length === 0 &&
-      location.length === 0
-    ) {
-      setAlertType("info");
-      setAlertMsg("Please fill any field to filter data.");
-      setIsShow(true);
-      return;
-    }
-
-    // console.log(location, "location", department, designation);
-    setIsSearched(true);
+  function handleSearch() {
     const formData = new FormData();
     formData.append("MemberID", "-1");
     formData.append("Name", name || "");
-    formData.append("RegCode", registrationId);
-    formData.append("MobileNo", mobileNo.toString());
+    formData.append("RegCode", registrationId || "");
+    formData.append("MobileNo", mobileNo.toString() || "");
     formData.append("Status", "Z");
     formData.append("M32_DepartmentId", parseInt(department) || -1);
     formData.append("M14_DesignationID", parseInt(designation) || -1);
     formData.append("M33_LocationId", parseInt(location) || -1);
-    formData.append("StaffTypeCode", "");
+    formData.append("StaffTypeCode", "Z");
     formData.append("UserToken", userData?.UserToken || "");
-    formData.append("UserId", userData.UserId || "");
+    formData.append("UserId", userData.UserId || 15);
     formData.append("IP", "");
     formData.append("MAC", "");
     formData.append("DocTypeId", "-1");
@@ -133,7 +119,7 @@ function UserReport({ navigation }) {
 
     getEmployeeDetail(formData)
       .then((res) => {
-        console.log("Employee Details:", res.data, res.data.result.length);
+        console.log("Employee Details:", userData.UserId);
         if (res.data.ResponseStatus == 1) {
           setEmployeeData(res.data.result);
         } else {
@@ -145,17 +131,69 @@ function UserReport({ navigation }) {
       .catch((err) => {
         console.log("Error fetching employee details:", err);
       });
+  }
+
+  const handleFilter = () => {
+    if (
+      registrationId.length === 0 &&
+      mobileNo.length === 0 &&
+      name.length === 0 &&
+      (designation === -1 || designation.length === 0) &&
+      (department === -1 || department.length === 0) &&
+      (location === -1 || location.length === 0)
+    ) {
+      setAlertType("info");
+      setAlertMsg("Please fill any field to filter data.");
+      setIsShow(true);
+      return;
+    }
+
+    // console.log(location, "location", department, designation);
+    setIsSearched(true);
+    handleSearch();
+    // const formData = new FormData();
+    // formData.append("MemberID", "-1");
+    // formData.append("Name", name || "");
+    // formData.append("RegCode", registrationId || "");
+    // formData.append("MobileNo", mobileNo.toString() || "");
+    // formData.append("Status", "Z");
+    // formData.append("M32_DepartmentId", parseInt(department) || -1);
+    // formData.append("M14_DesignationID", parseInt(designation) || -1);
+    // formData.append("M33_LocationId", parseInt(location) || -1);
+    // formData.append("StaffTypeCode", "Z");
+    // formData.append("UserToken", userData?.UserToken || "");
+    // formData.append("UserId", userData.UserId || "");
+    // formData.append("IP", "");
+    // formData.append("MAC", "");
+    // formData.append("DocTypeId", "-1");
+    // formData.append("GeoLocation", "56.225551,58.5646");
+
+    // getEmployeeDetail(formData)
+    //   .then((res) => {
+    //     console.log("Employee Details:", res.data, res.data.result.length);
+    //     if (res.data.ResponseStatus == 1) {
+    //       setEmployeeData(res.data.result);
+    //     } else {
+    //       setAlertType("info");
+    //       setAlertMsg(res.data.ResponseMessage);
+    //       setIsShow(true);
+    //     }
+    //   })
+    //   .catch((err) => {
+    //     console.log("Error fetching employee details:", err);
+    //   });
   };
 
   const handleReset = () => {
     setRegistrationId("");
     setMobileNo("");
     setName("");
-    setDesignation("");
-    setDepartment("");
-    setLocation("");
+    setDesignation(-1);
+    setDepartment(-1);
+    setLocation(-1);
     setIsSearched(false);
-    setEmployeeData([]);
+    setEmployeeData();
+    handleSearch();
   };
 
   const renderItem = ({ item }) => (
@@ -294,57 +332,63 @@ function UserReport({ navigation }) {
           btnTextColor={COLORS.primary}
         />
 
-        <ScrollView horizontal>
-          <View>
-            {/* Table Header */}
-            <View style={[styles.Tablerow, { backgroundColor: "#eee" }]}>
-              {[
-                "Registration Code",
-                "Name",
-                "Mobile No",
-                "Edit",
-                "View/Update Doc",
-              ].map((heading, idx) => (
-                <Text key={idx} style={[styles.cell, styles.headerCell]}>
-                  {heading}
-                </Text>
+        {!employeeData ? (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator color={COLORS.primary} size={"large"} />
+          </View>
+        ) : (
+          <ScrollView horizontal>
+            <View>
+              {/* Table Header */}
+              <View style={[styles.Tablerow, { backgroundColor: "#eee" }]}>
+                {[
+                  "Registration Code",
+                  "Name",
+                  "Mobile No",
+                  "Edit",
+                  "View/Update Doc",
+                ].map((heading, idx) => (
+                  <Text key={idx} style={[styles.cell, styles.headerCell]}>
+                    {heading}
+                  </Text>
+                ))}
+              </View>
+
+              {/* Table Body (Row Data) */}
+              {employeeData?.map((item, index) => (
+                <View key={index} style={styles.Tablerow}>
+                  <Text style={styles.cell}>{item.RegistrationCode}</Text>
+                  <Text style={styles.cell}>{item.Name}</Text>
+                  <Text style={styles.cell}>{item.MobileNo}</Text>
+
+                  <View style={styles.cellWrapper}>
+                    <CustomButton
+                      btnText={"Edit"}
+                      style={styles.tableBtn}
+                      onPress={() =>
+                        navigation.push(SCREENS.EMPLOYEEREGISTRATION, {
+                          isNew: false,
+                          employeeData: item,
+                        })
+                      }
+                    />
+                  </View>
+                  <View style={styles.cellWrapper}>
+                    <CustomButton
+                      btnText={"View/Update"}
+                      style={styles.tableBtn}
+                      onPress={() =>
+                        navigation.push(SCREENS.EMPLOYEEUPLOADDOC, {
+                          userRegistrationId: item.RegistrationCode,
+                        })
+                      }
+                    />
+                  </View>
+                </View>
               ))}
             </View>
-
-            {/* Table Body (Row Data) */}
-            {employeeData?.map((item, index) => (
-              <View key={index} style={styles.Tablerow}>
-                <Text style={styles.cell}>{item.RegistrationCode}</Text>
-                <Text style={styles.cell}>{item.Name}</Text>
-                <Text style={styles.cell}>{item.MobileNo}</Text>
-
-                <View style={styles.cellWrapper}>
-                  <CustomButton
-                    btnText={"Edit"}
-                    style={styles.tableBtn}
-                    onPress={() =>
-                      navigation.push(SCREENS.EMPLOYEEREGISTRATION, {
-                        isNew: false,
-                        employeeData: item,
-                      })
-                    }
-                  />
-                </View>
-                <View style={styles.cellWrapper}>
-                  <CustomButton
-                    btnText={"View/Update"}
-                    style={styles.tableBtn}
-                    onPress={() =>
-                      navigation.push(SCREENS.EMPLOYEEUPLOADDOC, {
-                        userRegistrationId: item.RegistrationCode,
-                      })
-                    }
-                  />
-                </View>
-              </View>
-            ))}
-          </View>
-        </ScrollView>
+          </ScrollView>
+        )}
       </ScrollView>
       <CustomAlert
         visible={isShow}
@@ -363,6 +407,11 @@ const styles = StyleSheet.create({
     gap: 5,
     justifyContent: "space-between",
     flexWrap: "wrap",
+  },
+  loaderContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   input: {
     height: 50,
