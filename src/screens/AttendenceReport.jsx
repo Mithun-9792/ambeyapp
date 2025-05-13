@@ -38,6 +38,7 @@ function AttendenceReport() {
   const [isSearched, setIsSearched] = useState(false);
   const [userData, setUserData] = useState({});
   const [attendanceData, setAttendanceData] = useState();
+  const [isReset, setIsReset] = useState(false);
 
   const getUserData = async () => {
     try {
@@ -82,9 +83,11 @@ function AttendenceReport() {
         setYears(res.data?.result);
       })
       .catch((err) => console.log("Years List Error", err));
-
-    getAttendence();
   }, []);
+
+  useEffect(() => {
+    getAttendence();
+  }, [isReset]);
 
   const handleGetAttendanceReport = () => {
     if (registrationId.length === 0 && mobileNo.length === 0) {
@@ -125,6 +128,7 @@ function AttendenceReport() {
     setAttendanceData([]);
     setSelectedMonth(`0${new Date().getMonth() + 1}`.slice(-2));
     setSelectedYear(new Date().getFullYear());
+    setIsReset(!isReset);
     // getAttendence();
   };
 
@@ -173,6 +177,7 @@ function AttendenceReport() {
                   value={registrationId}
                   onChangeText={setRegistrationId}
                   readOnly={mobileNo.length > 0 || isSearched}
+                  editable={!isSearched}
                 />
               </View>
               <View style={styles.inputWrapper}>
@@ -183,6 +188,7 @@ function AttendenceReport() {
                   onChangeText={setMobileNo}
                   keyboardType="phone-pad"
                   readOnly={registrationId.length > 0 || isSearched}
+                  editable={!isSearched}
                 />
               </View>
             </View>
@@ -197,6 +203,7 @@ function AttendenceReport() {
                   }}
                   style={styles.picker}
                   mode="dropdown"
+                  enabled={!isSearched}
                 >
                   <Picker.Item label="Month" value="" />
                   {months?.map((item) => (
@@ -216,6 +223,7 @@ function AttendenceReport() {
                   }}
                   style={styles.picker}
                   mode="dropdown"
+                  enabled={!isSearched}
                 >
                   <Picker.Item label="Year" value="" />
                   {years?.map((item) => (
@@ -235,7 +243,7 @@ function AttendenceReport() {
                 isSearched
                   ? () => {
                       handleReset();
-                      getAttendence();
+                      // getAttendence();
                     }
                   : handleGetAttendanceReport
               }

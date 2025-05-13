@@ -11,7 +11,10 @@ import {
 import { loginService } from "../services/auth.services";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLORS } from "../constants/colors";
+import useToaster from "../hooks/useToaster";
+import { SCREENS } from "../constants/route";
 export default function Example({ navigation }) {
+  const { AlertView, showAlert } = useToaster();
   const [form, setForm] = useState({
     UserId: "",
     Password: "",
@@ -31,7 +34,7 @@ export default function Example({ navigation }) {
 
   const handleLogin = () => {
     if (form.UserId === "" || form.Password === "") {
-      alert("Please fill all the fields");
+      showAlert("Please fill all the fields", "info");
       return;
     }
     const formData = new FormData();
@@ -41,9 +44,9 @@ export default function Example({ navigation }) {
     console.log(formData);
     loginService(formData)
       .then((res) => {
-        console.log(res.data?.result[0]);
+        console.log(res.data);
         storeUserData(res.data?.result[0]);
-        navigation.push("Dashboard");
+        navigation.push(SCREENS.DASHBOARD);
       })
       .catch((err) => {
         console.log(err.response.data);
@@ -105,6 +108,7 @@ export default function Example({ navigation }) {
           </TouchableOpacity>
         </View>
       </View>
+      <AlertView />
     </SafeAreaView>
   );
 }

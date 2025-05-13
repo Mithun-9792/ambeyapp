@@ -95,14 +95,14 @@ const MarkAttendence = () => {
   };
 
   const handleMarkAttendence = (attendeceData) => {
-    console.log(attendeceData);
+    // console.log(attendeceData);
     const formData = new FormData();
     formData.append(
       "ListData",
       JSON.stringify([
         {
-          MemberId: attendeceData.MemberId,
-          Date: new Date().toLocaleDateString(),
+          MemberId: attendeceData.MemberID,
+          Date: new Date(),
           IsPresent: attendeceData.IsPresent,
           LeaveTypeId: attendeceData.leaveType,
           LeaveTypeName: LeaveTypeName,
@@ -116,7 +116,7 @@ const MarkAttendence = () => {
     formData.append("MAC", "56546DF345345");
     formData.append("UserId", "15");
     formData.append("GeoLocation", "12.26565,15.544564");
-    console.log(formData);
+    // console.log(formData);
     lockAttendenceService(formData)
       .then((res) => {
         console.log(res.data);
@@ -185,12 +185,7 @@ const MarkAttendence = () => {
             ))}
           </Picker>
         </View>
-        <View
-          style={[
-            styles.cell,
-            { alignContent: "center", paddingHorizontal: 4 },
-          ]}
-        >
+        <View style={[styles.cell, { paddingHorizontal: 4 }]}>
           <TextInput
             style={[styles.input]}
             value={item.remark}
@@ -321,7 +316,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 5,
     borderColor: "#ccc",
-    textAlign: "center",
   },
   btn: {
     backgroundColor: COLORS.secondary,
