@@ -309,7 +309,7 @@ function EmployeeRegistration() {
 
   const onSubmit = (data) => {
     console.log(data, "submit data");
-    data.imgUser = profileImage;
+    // data.imgUser = profileImage;
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       if (value === undefined || value === null) return;

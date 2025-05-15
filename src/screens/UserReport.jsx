@@ -99,6 +99,10 @@ function UserReport({ navigation }) {
     handleSearch();
   }, []);
 
+  useEffect(() => {
+    handleSearch();
+  }, [isSearched]);
+
   function handleSearch() {
     const formData = new FormData();
     formData.append("MemberID", "-1");
@@ -119,7 +123,7 @@ function UserReport({ navigation }) {
 
     getEmployeeDetail(formData)
       .then((res) => {
-        console.log("Employee Details:", userData.UserId);
+        // console.log("Employee Details:", res.data.result);
         if (res.data.ResponseStatus == 1) {
           setEmployeeData(res.data.result);
         } else {
@@ -188,9 +192,9 @@ function UserReport({ navigation }) {
     setRegistrationId("");
     setMobileNo("");
     setName("");
-    setDesignation(-1);
-    setDepartment(-1);
-    setLocation(-1);
+    setDesignation("");
+    setDepartment("");
+    setLocation("");
     setIsSearched(false);
     setEmployeeData();
     handleSearch();

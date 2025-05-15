@@ -108,7 +108,7 @@ function VehicleLog() {
     formData.append("GeoLocation", "64.5644,54.6546");
 
     const response = await getVehicleRunningMonthlyLogReport(formData);
-    console.log("Log Report Data", response.data);
+    // console.log("Log Report Data", response.data);
     if (response.data.ResponseStatus == 1) {
       setMonthlyLogReports(response.data.result);
       setDates(response.data.result);
@@ -212,7 +212,7 @@ function VehicleLog() {
   };
 
   const calculateTotals = () => {
-    const TotalKm = dates.reduce(
+    const allTotalKm = dates.reduce(
       (sum, item) => sum + (parseFloat(item.TotalKm) || 0),
       0
     );
@@ -225,9 +225,9 @@ function VehicleLog() {
       0
     );
     const Average =
-      totalDieselVolume > 0 ? (TotalKm / totalDieselVolume).toFixed(2) : 0;
+      totalDieselVolume > 0 ? (allTotalKm / totalDieselVolume).toFixed(2) : 0;
 
-    return { TotalKm, totalDieselAmount, totalDieselVolume, Average };
+    return { allTotalKm, totalDieselAmount, totalDieselVolume, Average };
   };
 
   const handleSubmit = () => {
@@ -235,12 +235,12 @@ function VehicleLog() {
       OpeningKM: item?.data?.OpeningKm,
       ClosingKM: item?.data?.ClosingKm,
       LogDate: item?.data?.CRDay1, // or use item.BillDate if needed
-      DieselAmount: item?.data?.TotalDeiselAmount,
+      DieselAmount: item?.data?.Amount,
       DieselRate: item?.data?.DieselRate,
       narration: item?.data?.Narration,
-      totalKm: item?.data?.SumKms,
+      totalKm: item?.data?.TotalKm,
     }));
-    // console.log(modifiedRowsArray, "Modified Rows Array", modifiedDates);
+    // console.log(modifiedRowsArray, "Modified Rows Array");
     // return;
     const formData = new FormData();
     formData.append("LogListData", JSON.stringify(modifiedRowsArray));
@@ -282,46 +282,46 @@ function VehicleLog() {
 
   const totals = calculateTotals();
 
-  const debounce = (func, delay) => {
-    let timeoutId;
-    return (...args) => {
-      if (timeoutId) clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        func(...args);
-      }, delay);
-    };
-  };
+  // const debounce = (func, delay) => {
+  //   let timeoutId;
+  //   return (...args) => {
+  //     if (timeoutId) clearTimeout(timeoutId);
+  //     timeoutId = setTimeout(() => {
+  //       func(...args);
+  //     }, delay);
+  //   };
+  // };
 
-  function handleGetVehicleNumberList(text) {
-    const formData = new FormData();
-    formData.append("VechileNo", text);
-    formData.append("UserToken", "sdfsdf3355");
-    formData.append("IP", "-1");
-    formData.append("MAC", "ertetet");
-    formData.append("GeoLocation", "20.25133,20.231464");
-    formData.append("UserId", "25");
+  // function handleGetVehicleNumberList(text) {
+  //   const formData = new FormData();
+  //   formData.append("VechileNo", text);
+  //   formData.append("UserToken", "sdfsdf3355");
+  //   formData.append("IP", "-1");
+  //   formData.append("MAC", "ertetet");
+  //   formData.append("GeoLocation", "20.25133,20.231464");
+  //   formData.append("UserId", "25");
 
-    getVehicleNumberListService(formData)
-      .then((res) => {
-        // console.log(res.data);
-        setVehicleNumberList(res.data.result);
-      })
-      .catch((err) => console.log("Client List Error", err));
-  }
+  //   getVehicleNumberListService(formData)
+  //     .then((res) => {
+  //       // console.log(res.data);
+  //       setVehicleNumberList(res.data.result);
+  //     })
+  //     .catch((err) => console.log("Client List Error", err));
+  // }
 
-  const debouncedGetVehicleNumberList = useCallback(
-    debounce(handleGetVehicleNumberList, 500),
-    []
-  );
+  // const debouncedGetVehicleNumberList = useCallback(
+  //   debounce(handleGetVehicleNumberList, 500),
+  //   []
+  // );
 
-  const handleTextChange = (text) => {
-    setVehicleNumber(text); // Update input immediately
-    debouncedGetVehicleNumberList(text); // Debounce filtering
-  };
+  // const handleTextChange = (text) => {
+  //   setVehicleNumber(text); // Update input immediately
+  //   debouncedGetVehicleNumberList(text); // Debounce filtering
+  // };
 
-  const handleSelect = (vehicle) => {
-    setVehicleNumber(vehicle);
-  };
+  // const handleSelect = (vehicle) => {
+  //   setVehicleNumber(vehicle);
+  // };
 
   const handleVehicleSelect = (selectedVehicle) => {
     setVehicleNumber(selectedVehicle?.number); // Update the selected vehicle number
@@ -571,7 +571,7 @@ function VehicleLog() {
                     <Text style={styles.cell}></Text>
                     <Text style={styles.cell}></Text>
                     <Text style={[styles.cell, { fontWeight: "bold" }]}>
-                      {totals.TotalKm}
+                      {totals.allTotalKm}
                     </Text>
                     <Text style={[styles.cell, { fontWeight: "bold" }]}>
                       {totals.totalDieselAmount?.toFixed(2)}

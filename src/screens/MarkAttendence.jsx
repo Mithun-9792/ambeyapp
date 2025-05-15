@@ -166,21 +166,24 @@ const MarkAttendence = () => {
           ]}
         >
           <Picker
-            selectedValue={item.leaveType}
+            selectedValue={item.leaveType} // Ensure this matches the value of Picker.Item
             onValueChange={(value) => {
-              handleUpdate(index, "leaveType", value?.LeaveTypeId);
-              setLeaveTypeName(value?.LeaveTypeName);
+              handleUpdate(index, "leaveType", value); // Set the leaveType to the selected value
+              const selectedLeaveType = leaveTypes.find(
+                (leaveType) => leaveType.LeaveTypeId === value
+              );
+              setLeaveTypeName(selectedLeaveType?.LeaveTypeName || ""); // Update LeaveTypeName
             }}
             style={[styles.picker]}
             itemStyle={{ fontSize: 14 }}
             dropdownIconColor={COLORS.primary}
           >
             <Picker.Item label="Type" value="" />
-            {leaveTypes.map((item) => (
+            {leaveTypes.map((leaveType) => (
               <Picker.Item
-                label={item?.LeaveTypeName}
-                value={item}
-                key={item.LeaveTypeId}
+                label={leaveType?.LeaveTypeName}
+                value={leaveType.LeaveTypeId} // Use LeaveTypeId as the value
+                key={leaveType.LeaveTypeId}
               />
             ))}
           </Picker>
