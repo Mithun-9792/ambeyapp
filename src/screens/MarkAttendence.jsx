@@ -23,6 +23,7 @@ import {
   lockAttendenceService,
 } from "../services/dashboard.services";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import CustomButton from "../components/CustomButton";
 
 const MarkAttendence = () => {
   const { showAlert, AlertView } = useToaster();
@@ -116,10 +117,51 @@ const MarkAttendence = () => {
     formData.append("MAC", "56546DF345345");
     formData.append("UserId", "15");
     formData.append("GeoLocation", "12.26565,15.544564");
-    // console.log(formData);
-    lockAttendenceService(formData)
+    handleAttendece(formData);
+  };
+
+  const handleMarkAllAttendence = () => {
+    if (!data || data.length === 0) {
+      showAlert("No data to mark attendance.", "info");
+      return;
+    }
+
+    // Validate all required fields
+    for (let item of data) {
+      if (item.IsPresent === "false" && !item.leaveType) {
+        showAlert(`Please select a leave type for ${item.Name}.`, "info");
+        return;
+      }
+    }
+
+    // Prepare the list
+    const listData = data.map((attendeceData) => {
+      const leaveTypeObj = leaveTypes.find(
+        (lt) => lt.LeaveTypeId === attendeceData.leaveType
+      );
+      return {
+        MemberId: attendeceData.MemberID,
+        Date: new Date(),
+        IsPresent: attendeceData.IsPresent,
+        LeaveTypeId: attendeceData.leaveType,
+        LeaveTypeName: leaveTypeObj ? leaveTypeObj.LeaveTypeName : "",
+        Remark: attendeceData.remark,
+      };
+    });
+
+    const formData = new FormData();
+    formData.append("ListData", JSON.stringify(listData));
+    formData.append("UserToken", userData?.UserToken || "");
+    formData.append("IP", "1025.125.2156.23");
+    formData.append("MAC", "56546DF345345");
+    formData.append("UserId", "15");
+    formData.append("GeoLocation", "12.26565,15.544564");
+    handleAttendece(formData);
+  };
+
+  function handleAttendece(formdata) {
+    lockAttendenceService(formdata)
       .then((res) => {
-        console.log(res.data);
         if (res.data.ResponseStatus == 1) {
           showAlert(res.data?.ResponseMessage, "success");
         } else {
@@ -129,7 +171,7 @@ const MarkAttendence = () => {
       .catch((err) => {
         console.log(err);
       });
-  };
+  }
 
   const renderItem = ({ item, index }) => (
     <ScrollView horizontal>
@@ -231,6 +273,17 @@ const MarkAttendence = () => {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <ScrollView>
+            <CustomButton
+              btnText={"Mark All Attendence"}
+              onPress={() => handleMarkAllAttendence()}
+              style={{
+                backgroundColor: COLORS.secondary,
+                paddingVertical: 12,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: COLORS.primary,
+              }}
+            />
             <ScrollView horizontal>
               <View style={{ flex: 1, padding: 30 }}>
                 <View style={styles.header}>
