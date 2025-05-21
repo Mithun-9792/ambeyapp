@@ -271,7 +271,7 @@ function EmployeeRegistration() {
   const launchCamera = async () => {
     let result = await ImagePicker.launchCameraAsync({
       mediaTypes: ["images"],
-      allowsEditing: true, // Allows cropping and editing the image
+      allowsEditing: false, // Allows cropping and editing the image
       aspect: [4, 3], // Aspect ratio of the image
       quality: 1, // Image quality (0 to 1)
       base64: true, // Include base64 data in the result
@@ -290,7 +290,7 @@ function EmployeeRegistration() {
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"],
-      allowsEditing: true,
+      allowsEditing: false,
       base64: true,
       aspect: [4, 3],
       quality: 1,
@@ -897,6 +897,7 @@ function EmployeeRegistration() {
                       <Image
                         source={{ uri: picPreview }}
                         style={styles.image}
+                        resizeMode="contain"
                       />
                     ) : (
                       <Text style={{ color: "gray", fontWeight: 500 }}>
