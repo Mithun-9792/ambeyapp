@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   StyleSheet,
   SafeAreaView,
@@ -13,7 +13,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { COLORS } from "../constants/colors";
 import useToaster from "../hooks/useToaster";
 import { SCREENS } from "../constants/route";
+import { AuthContext } from "../authContext/AuthContext";
 export default function Example({ navigation }) {
+  const { login } = useContext(AuthContext);
   const { AlertView, showAlert } = useToaster();
   const [form, setForm] = useState({
     UserId: "",
@@ -22,15 +24,6 @@ export default function Example({ navigation }) {
     MAC: "",
     Geolocation: "",
   });
-
-  const storeUserData = async (userData) => {
-    try {
-      await AsyncStorage.setItem("userData", JSON.stringify(userData));
-      console.log("User data saved to AsyncStorage");
-    } catch (error) {
-      console.error("Error saving user data", error);
-    }
-  };
 
   const handleLogin = () => {
     if (form.UserId === "" || form.Password === "") {
@@ -45,8 +38,15 @@ export default function Example({ navigation }) {
     loginService(formData)
       .then((res) => {
         console.log(res.data);
-        storeUserData(res.data?.result[0]);
-        navigation.push(SCREENS.DASHBOARD);
+        // storeUserData(res.data?.result[0]);
+        login(res.data?.result[0]);
+        setForm({
+          UserId: "",
+          Password: "",
+          IP: "",
+          MAC: "",
+          Geolocation: "",
+        });
       })
       .catch((err) => {
         console.log(err.response.data);

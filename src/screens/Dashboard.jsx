@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Image,
   SafeAreaView,
@@ -14,27 +14,12 @@ import ActionButton from "../components/ActionButton"; // Import your new compon
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { COLORS } from "../constants/colors";
 import ConfirmModal from "../components/ConfirmModal";
+import { AuthContext } from "../authContext/AuthContext";
 function Dashboard({ navigation }) {
-  const [time, setTime] = useState("");
+  const { logout } = useContext(AuthContext);
   const [userName, setUserName] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
 
-  useEffect(() => {
-    const updateTime = () => {
-      setTime(
-        new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        })
-      );
-    };
-
-    updateTime(); // Set initial time
-    const interval = setInterval(updateTime, 1000); // Update every second
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Fetch user data from AsyncStorage
   useEffect(() => {
@@ -53,16 +38,6 @@ function Dashboard({ navigation }) {
     fetchUserData();
   }, []);
 
-  function handleLogout() {
-    // Clear AsyncStorage and navigate to login screen
-    AsyncStorage.clear()
-      .then(() => {
-        navigation.replace(SCREENS.LOGIN);
-      })
-      .catch((error) => {
-        console.error("Failed to clear AsyncStorage", error);
-      });
-  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -70,16 +45,7 @@ function Dashboard({ navigation }) {
       <View style={styles.header}>
         <Image source={require("../assets/logo.png")} style={styles.image} />
         <Text style={{ fontSize: 18, fontWeight: "600" }}>{userName}</Text>
-        {/* <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "600",
-            color: "green",
-            paddingHorizontal: 10,
-          }}
-        >
-          {time}
-        </Text> */}
+       
         <TouchableOpacity onPress={() => setModalVisible(true)}>
           <FontAwesome
             name="power-off"
@@ -165,7 +131,7 @@ function Dashboard({ navigation }) {
         modalText={"Are you sure you want to logout?"}
         modalVisible={modalVisible}
         setModalVisible={() => setModalVisible(false)}
-        onConfirm={() => handleLogout()}
+        onConfirm={logout}
         onCancel={() => setModalVisible(false)}
       />
     </SafeAreaView>

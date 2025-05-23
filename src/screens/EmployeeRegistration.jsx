@@ -74,7 +74,7 @@ function EmployeeRegistration() {
   const { showAlert, AlertView } = useToaster();
   const route = useRoute();
   const { isNew, employeeData } = route.params;
-  // console.log(employeeData, "employee data");
+  console.log(employeeData, "employee data");
   const eighteenYearsAgo = new Date();
   eighteenYearsAgo.setFullYear(eighteenYearsAgo.getFullYear() - 18);
   const {
@@ -101,7 +101,11 @@ function EmployeeRegistration() {
   const [locations, setLocations] = useState([]);
   const [relations, setRelations] = useState([]);
   const [title, setTitle] = useState([]);
-  const [picPreview, setPicPreview] = useState(null);
+  const [picPreview, setPicPreview] = useState(
+    employeeData
+      ? employeeData.Photo?.replace("..", "https://ambey.co.in")
+      : null
+  );
   const [profileImage, setProfileImage] = useState(null);
   const [date, setDate] = useState(new Date());
   const [dob, setDob] = useState(eighteenYearsAgo);
@@ -151,6 +155,7 @@ function EmployeeRegistration() {
       setValue("NomineeName", employeeData.NomineeName || "");
       setValue("NomineeAdharNo", employeeData.NomineeAdharNo || "");
       setValue("NomineeRelation", employeeData.NomineeRelation || "");
+      setValue("imgUser", employeeData.Photo || "");
     }
   }, [employeeData]);
 
@@ -320,7 +325,7 @@ function EmployeeRegistration() {
         formData.append(key, value.toString());
       }
     });
-    // console.log(formData, "formdata");
+    console.log(formData, "formdata");
 
     registerService(formData)
       .then((res) => {
@@ -895,7 +900,7 @@ function EmployeeRegistration() {
                   >
                     {picPreview ? (
                       <Image
-                        source={{ uri: picPreview }}
+                        source={{ uri: `${picPreview}?t=${Date.now()}` }}
                         style={styles.image}
                         resizeMode="contain"
                       />

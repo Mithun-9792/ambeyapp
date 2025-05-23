@@ -1,28 +1,22 @@
-import React, { useRef } from "react";
+import React, { useContext, useEffect, useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import LottieView from "lottie-react-native";
 import { SCREENS } from "../constants/route";
 import { COLORS } from "../constants/colors";
+import { AuthContext } from "../authContext/AuthContext";
 
 export default function OnboardingScreen({ navigation }) {
+  const { showOnboarding, completeOnboarding } = useContext(AuthContext);
   const animation = useRef(null);
-  const getUserData = async () => {
-    try {
-      const jsonValue = await AsyncStorage.getItem("userData");
-      if (jsonValue != null) {
-        const userData = JSON.parse(jsonValue);
-        navigation.replace(SCREENS.DASHBOARD);
-      }
-    } catch (error) {
-      console.error("Error retrieving user data", error);
+
+  useEffect(() => {
+    if (showOnboarding) {
+      setTimeout(() => {
+        navigation.replace(SCREENS.LOGIN);
+      }, 100);
     }
-  };
-  getUserData();
-  const handleGetStarted = async () => {
-    await AsyncStorage.setItem("@viewedOnboarding", "true");
-    navigation.replace("Login");
-  };
+  }, [showOnboarding]);
 
   return (
     <View style={styles.container}>
@@ -39,7 +33,7 @@ export default function OnboardingScreen({ navigation }) {
       </View>
       <Text style={styles.subtitle}>Your journey starts here!</Text>
 
-      <TouchableOpacity style={styles.button} onPress={handleGetStarted}>
+      <TouchableOpacity style={styles.button} onPress={completeOnboarding}>
         <Text style={styles.buttonText}>Get Started</Text>
       </TouchableOpacity>
     </View>

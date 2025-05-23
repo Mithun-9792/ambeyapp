@@ -534,7 +534,9 @@ function EmployeeUploadDoc() {
                   </Text>
                   <View style={[styles.imagePlaceholder, { height: 200 }]}>
                     <Image
-                      source={{ uri: item?.AndriodPhotoPath2 }}
+                      source={{
+                        uri: `${item?.AndriodPhotoPath2}?t=${Date.now()}`,
+                      }}
                       style={[styles.image, { padding: 5 }]}
                     />
                   </View>
